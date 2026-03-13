@@ -1,0 +1,91 @@
+stages:
+  - install
+  - lint
+  - typecheck
+  - test
+  - build
+  - security-scan
+
+variables:
+  NODE_VERSION: "18.18.0"
+  npm_cache_folder: .npm
+
+cache:
+  paths:
+    - node_modules/
+    - .npm/
+    - .turbo/cache
+
+before_script:
+  - node --version
+  - npm --version
+
+install:
+  stage: install
+  image: node:18-alpine
+  script:
+    - npm ci --cache .npm
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 30 mins
+
+lint:
+  stage: lint
+  image: node:18-alpine
+  needs:
+    - install
+  script:
+    - npm run lint
+  allow_failure: false
+
+typecheck:
+  stage: typecheck
+  image: node:18-alpine
+  needs:
+    - install
+  script:
+    - npm run typecheck
+  allow_failure: false
+
+test:
+  stage: test
+  image: node:18-alpine
+  needs:
+    - install
+  script:
+    - npm run test:coverage
+  artifacts:
+    paths:
+      - coverage/
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    expire_in: 30 days
+  coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
+  allow_failure: false
+
+build:
+  stage: build
+  image: node:18-alpine
+  needs:
+    - typecheck
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 day
+  allow_failure: false
+
+security-scan:
+  stage: security-scan
+  image: node:18-alpine
+  needs:
+    - install
+  script:
+    - echo "Running security checks..."
+    - npm audit --production || true
+    - echo "Security checks complete"
+  allow_failure: true
