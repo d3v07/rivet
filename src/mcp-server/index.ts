@@ -12,6 +12,7 @@ import { executeFetchGcpCarbon } from '@/mcp-server/tools/fetch-gcp-carbon';
 import { executeGetComputePricing } from '@/mcp-server/tools/get-compute-pricing';
 import { executePlanIssue } from '@/mcp-server/tools/plan-issue';
 import { executeExecutePlan } from '@/mcp-server/tools/execute-plan';
+import { executeReviewCode } from '@/mcp-server/tools/review-code';
 import { logInfo, logError, createCorrelationId } from '@/lib/logger';
 
 const server = new Server(
@@ -97,6 +98,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'execute_plan': {
         const result = await executeExecutePlan({
+          ...request.params.arguments,
+          correlationId,
+        });
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'review_code': {
+        const result = await executeReviewCode({
           ...request.params.arguments,
           correlationId,
         });

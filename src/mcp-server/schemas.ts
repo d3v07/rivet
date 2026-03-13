@@ -203,3 +203,60 @@ export const ExecutePlanOutputSchema = z.object({
 });
 
 export type ExecutePlanOutput = z.infer<typeof ExecutePlanOutputSchema>;
+
+/**
+ * Input schema for review_code tool
+ */
+export const CodeFileSchema = z.object({
+  path: z.string().describe('File path'),
+  content: z.string().describe('File content/source code'),
+});
+
+export const ReviewCodeInputSchema = z.object({
+  issueKey: z.string().min(1).describe('Jira issue key'),
+  files: z.array(CodeFileSchema).describe('Code files to review'),
+  correlationId: z.string().uuid().describe('Correlation ID for tracing'),
+});
+
+export type ReviewCodeInput = z.infer<typeof ReviewCodeInputSchema>;
+
+/**
+ * Output schema for review_code tool
+ */
+export const SecurityFindingSchema = z.object({
+  severity: z.enum(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']).describe('Severity level'),
+  category: z
+    .enum([
+      'SQL_INJECTION',
+      'XSS',
+      'AUTH',
+      'SECRETS',
+      'VALIDATION',
+      'LOGGING',
+      'DEPENDENCY',
+      'OTHER',
+    ])
+    .describe('Vulnerability category'),
+  location: z.string().describe('File path where issue found'),
+  issue: z.string().describe('Description of the issue'),
+  recommendation: z.string().describe('How to fix it'),
+  reference: z.string().optional().describe('Reference link (e.g., OWASP)'),
+});
+
+export const SecurityReviewSchema = z.object({
+  reviewId: z.string().describe('Unique review ID'),
+  issueKey: z.string().describe('Jira issue key'),
+  timestamp: z.string().datetime().describe('Review timestamp'),
+  overallSeverity: z
+    .enum(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'PASS'])
+    .describe('Overall severity'),
+  findings: z.array(SecurityFindingSchema).describe('All findings'),
+  summary: z.string().describe('Human-readable summary'),
+  blocksDeployment: z.boolean().describe('Whether deployment is blocked'),
+});
+
+export const ReviewCodeOutputSchema = z.object({
+  review: SecurityReviewSchema.describe('Security review results'),
+});
+
+export type ReviewCodeOutput = z.infer<typeof ReviewCodeOutputSchema>;
