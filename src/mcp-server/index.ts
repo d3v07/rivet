@@ -10,6 +10,7 @@ import { CallToolRequestSchema, ErrorCode, McpError } from '@modelcontextprotoco
 import { executeQueryJiraBacklog } from '@/mcp-server/tools/query-jira-backlog';
 import { executeFetchGcpCarbon } from '@/mcp-server/tools/fetch-gcp-carbon';
 import { executeGetComputePricing } from '@/mcp-server/tools/get-compute-pricing';
+import { executePlanIssue } from '@/mcp-server/tools/plan-issue';
 import { logInfo, logError, createCorrelationId } from '@/lib/logger';
 
 const server = new Server(
@@ -65,6 +66,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       case 'get_compute_pricing': {
         const result = await executeGetComputePricing({
+          ...request.params.arguments,
+          correlationId,
+        });
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'plan_issue': {
+        const result = await executePlanIssue({
           ...request.params.arguments,
           correlationId,
         });
