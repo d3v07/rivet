@@ -159,3 +159,47 @@ export const PlanIssueOutputSchema = z.object({
 });
 
 export type PlanIssueOutput = z.infer<typeof PlanIssueOutputSchema>;
+
+/**
+ * Input schema for execute_plan tool
+ */
+export const ExecutePlanInputSchema = z.object({
+  plan: ExecutionPlanSchema.describe('Execution plan to execute'),
+  correlationId: z.string().uuid().describe('Correlation ID for tracing'),
+});
+
+export type ExecutePlanInput = z.infer<typeof ExecutePlanInputSchema>;
+
+/**
+ * Output schema for execute_plan tool
+ */
+export const StepExecutionResultSchema = z.object({
+  stepNumber: z.number().describe('Step number'),
+  status: z.enum(['success', 'failed', 'blocked']).describe('Step status'),
+  action: z.string().describe('What was performed'),
+  result: z.string().describe('Step result/output'),
+  filesModified: z.array(z.string()).describe('Files changed'),
+  testsPassedCount: z.number().optional().describe('Number of tests passed'),
+  coveragePercent: z.number().optional().describe('Code coverage percentage'),
+  errorMessage: z.string().optional().describe('Error message if failed'),
+  duration: z.number().describe('Duration in milliseconds'),
+});
+
+export const DeveloperProgressSchema = z.object({
+  planId: z.string().describe('Plan ID'),
+  issueKey: z.string().describe('Jira issue key'),
+  status: z.enum(['started', 'in_progress', 'completed', 'failed']).describe('Overall status'),
+  completedSteps: z.number().describe('Steps completed successfully'),
+  totalSteps: z.number().describe('Total steps in plan'),
+  results: z.array(StepExecutionResultSchema).describe('Results for each step'),
+  overallStatus: z.string().describe('Overall status message'),
+  startedAt: z.string().datetime().describe('Execution start time'),
+  completedAt: z.string().datetime().optional().describe('Execution end time'),
+  totalDuration: z.number().optional().describe('Total duration in milliseconds'),
+});
+
+export const ExecutePlanOutputSchema = z.object({
+  progress: DeveloperProgressSchema.describe('Execution progress and results'),
+});
+
+export type ExecutePlanOutput = z.infer<typeof ExecutePlanOutputSchema>;
