@@ -12,9 +12,6 @@ definition:
       inputs:
         - "context:goal"
       toolset: ["read_file", "read_files"]
-      mcp_tools:
-        - query_jira_backlog
-        - plan_issue
       ui_log_events:
         - on_agent_final_answer
 
@@ -25,8 +22,6 @@ definition:
         - "context:goal"
         - "planner:output"
       toolset: ["read_file", "read_files"]
-      mcp_tools:
-        - execute_plan
       ui_log_events:
         - on_agent_final_answer
 
@@ -37,8 +32,6 @@ definition:
         - "context:goal"
         - "developer:output"
       toolset: ["read_file", "read_files"]
-      mcp_tools:
-        - review_code
       ui_log_events:
         - on_agent_final_answer
 
@@ -49,9 +42,6 @@ definition:
         - "context:goal"
         - "security_review:output"
       toolset: ["read_file", "read_files"]
-      mcp_tools:
-        - fetch_gcp_carbon_metrics
-        - get_compute_pricing
       ui_log_events:
         - on_agent_final_answer
 

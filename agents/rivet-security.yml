@@ -41,6 +41,3 @@ system_prompt: |
 tools:
   - read_file
   - read_files
-mcp_tools:
-  - name: review_code
-    description: "Scan code for OWASP Top 10 vulnerabilities using regex-based detection. Returns severity-rated findings for secrets, XSS, SQL injection, auth issues, and prompt injection risks."
