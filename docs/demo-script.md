@@ -56,7 +56,7 @@ npx vitest run
 
 - **4 agents**: Planner, Developer, Security Analyst, Deployer
 - **6 MCP tools**: Jira query, plan issue, execute plan, review code, GCP carbon, GCP pricing
-- **Claude API integration** with deterministic fallback
+- **Multi-provider LLM integration** (Ollama/Gemini/Vertex) with deterministic fallback
 - **AGENTS.md governance**: behavioral rules for all agents
 - **Green Agents**: carbon-aware deployment + token efficiency tracking
 - **Security**: prompt injection sanitization, JQL injection prevention, OWASP scanning
