@@ -1,41 +1,51 @@
 /**
  * LLM client for agent AI calls
- * Uses Google Gemini via @google/genai with token tracking and graceful fallback
- * Supports both Gemini API (API key) and Vertex AI (GCP project)
+ * Supports Ollama (local), Gemini API (API key), and Vertex AI (GCP project)
+ * Priority: Ollama → Gemini → Vertex AI
  */
 
 import { GoogleGenAI } from '@google/genai';
+import axios from 'axios';
 import { recordInvocation, estimateTokens } from '@/lib/token-tracker';
 import { logInfo, logError, type LogContext } from '@/lib/logger';
 
-let clientInstance: GoogleGenAI | null = null;
+export type LLMProvider = 'ollama' | 'gemini' | 'vertex';
 
-function getClient(): GoogleGenAI | null {
-  if (clientInstance) return clientInstance;
+let geminiClient: GoogleGenAI | null = null;
+
+export function getActiveProvider(): LLMProvider | null {
+  if (process.env.OLLAMA_BASE_URL) return 'ollama';
+  if (process.env.GEMINI_API_KEY) return 'gemini';
+  if (process.env.GCP_PROJECT_ID) return 'vertex';
+  return null;
+}
+
+function getGeminiClient(): GoogleGenAI | null {
+  if (geminiClient) return geminiClient;
 
   const geminiKey = process.env.GEMINI_API_KEY;
   const gcpProject = process.env.GCP_PROJECT_ID;
   const gcpLocation = process.env.GCP_LOCATION || 'us-central1';
 
   if (geminiKey) {
-    clientInstance = new GoogleGenAI({ apiKey: geminiKey });
-    return clientInstance;
+    geminiClient = new GoogleGenAI({ apiKey: geminiKey });
+    return geminiClient;
   }
 
   if (gcpProject) {
-    clientInstance = new GoogleGenAI({
+    geminiClient = new GoogleGenAI({
       vertexai: true,
       project: gcpProject,
       location: gcpLocation,
     });
-    return clientInstance;
+    return geminiClient;
   }
 
   return null;
 }
 
 export function isClaudeAvailable(): boolean {
-  return !!(process.env.GEMINI_API_KEY || process.env.GCP_PROJECT_ID);
+  return getActiveProvider() !== null;
 }
 
 export interface ClaudeRequest {
@@ -54,21 +64,80 @@ export interface ClaudeResponse {
   stopReason: string | null;
 }
 
-/**
- * Call Gemini API with structured prompt, token tracking, and error handling
- */
-export async function callClaude(request: ClaudeRequest): Promise<ClaudeResponse> {
-  const client = getClient();
-  const context: LogContext = {
-    correlationId: request.correlationId,
-    toolName: request.toolName,
-  };
+async function callOllama(request: ClaudeRequest, context: LogContext): Promise<ClaudeResponse> {
+  const baseUrl = process.env.OLLAMA_BASE_URL!;
+  const model = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
+  const startTime = Date.now();
 
-  if (!client) {
-    logInfo('Gemini API not available, using deterministic fallback', context);
-    throw new ClaudeUnavailableError('GEMINI_API_KEY or GCP_PROJECT_ID not configured');
+  try {
+    logInfo('Calling Ollama', {
+      ...context,
+      model,
+      promptLength: request.prompt.length,
+    });
+
+    const response = await axios.post(
+      `${baseUrl}/api/chat`,
+      {
+        model,
+        messages: [
+          { role: 'system', content: request.system },
+          { role: 'user', content: request.prompt },
+        ],
+        stream: false,
+        options: {
+          num_predict: request.maxTokens ?? 4096,
+          temperature: request.temperature ?? 0.3,
+        },
+      },
+      { timeout: 120000 }
+    );
+
+    const textContent = response.data.message?.content ?? '';
+    const inputTokens = response.data.prompt_eval_count ?? estimateTokens(request.prompt);
+    const outputTokens = response.data.eval_count ?? estimateTokens(textContent);
+    const latencyMs = Date.now() - startTime;
+
+    recordInvocation({
+      toolName: `ollama:${request.toolName}`,
+      inputTokens,
+      outputTokens,
+      latencyMs,
+      timestamp: new Date().toISOString(),
+      correlationId: request.correlationId,
+      status: 'success',
+    });
+
+    logInfo('Ollama response received', {
+      ...context,
+      model,
+      inputTokens,
+      outputTokens,
+      latencyMs,
+    });
+
+    return { content: textContent, inputTokens, outputTokens, stopReason: null };
+  } catch (error) {
+    const latencyMs = Date.now() - startTime;
+    logError('Ollama call failed', context, error as Error);
+
+    recordInvocation({
+      toolName: `ollama:${request.toolName}`,
+      inputTokens: estimateTokens(request.prompt),
+      outputTokens: 0,
+      latencyMs,
+      timestamp: new Date().toISOString(),
+      correlationId: request.correlationId,
+      status: 'error',
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+
+    throw error;
   }
+}
 
+async function callGemini(request: ClaudeRequest, context: LogContext): Promise<ClaudeResponse> {
+  const client = getGeminiClient()!;
   const startTime = Date.now();
 
   try {
@@ -90,7 +159,6 @@ export async function callClaude(request: ClaudeRequest): Promise<ClaudeResponse
     const textContent = response.text ?? '';
     const inputTokens = response.usageMetadata?.promptTokenCount ?? estimateTokens(request.prompt);
     const outputTokens = response.usageMetadata?.candidatesTokenCount ?? estimateTokens(textContent);
-
     const latencyMs = Date.now() - startTime;
 
     recordInvocation({
@@ -110,16 +178,9 @@ export async function callClaude(request: ClaudeRequest): Promise<ClaudeResponse
       latencyMs,
     });
 
-    return {
-      content: textContent,
-      inputTokens,
-      outputTokens,
-      stopReason: null,
-    };
+    return { content: textContent, inputTokens, outputTokens, stopReason: null };
   } catch (error) {
     const latencyMs = Date.now() - startTime;
-
-    if (error instanceof ClaudeUnavailableError) throw error;
 
     logError('Gemini API call failed', context, error as Error);
 
@@ -138,6 +199,27 @@ export async function callClaude(request: ClaudeRequest): Promise<ClaudeResponse
   }
 }
 
+export async function callClaude(request: ClaudeRequest): Promise<ClaudeResponse> {
+  const provider = getActiveProvider();
+  const context: LogContext = {
+    correlationId: request.correlationId,
+    toolName: request.toolName,
+  };
+
+  if (!provider) {
+    logInfo('No LLM provider available, using deterministic fallback', context);
+    throw new ClaudeUnavailableError(
+      'No LLM provider configured. Set OLLAMA_BASE_URL, GEMINI_API_KEY, or GCP_PROJECT_ID'
+    );
+  }
+
+  if (provider === 'ollama') {
+    return callOllama(request, context);
+  }
+
+  return callGemini(request, context);
+}
+
 export class ClaudeUnavailableError extends Error {
   constructor(message: string) {
     super(message);
@@ -145,9 +227,6 @@ export class ClaudeUnavailableError extends Error {
   }
 }
 
-/**
- * Call Gemini with JSON output parsing
- */
 export async function callClaudeJson<T>(
   request: ClaudeRequest,
   parser: (raw: string) => T
@@ -165,9 +244,6 @@ export async function callClaudeJson<T>(
   return parser(cleaned);
 }
 
-/**
- * Reset the client instance (for testing)
- */
 export function resetClient(): void {
-  clientInstance = null;
+  geminiClient = null;
 }
