@@ -24,7 +24,7 @@ install:
   stage: install
   image: node:18-alpine
   script:
-    - npm ci --cache .npm
+    - npm ci --cache .npm --legacy-peer-deps
   artifacts:
     paths:
       - node_modules/

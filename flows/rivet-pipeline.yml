@@ -1,0 +1,61 @@
+name: "Rivet DevSecOps Pipeline"
+description: "End-to-end autonomous DevSecOps flow: ingests Jira backlog, generates execution plans, implements code via TDD, runs security review, and deploys to the lowest-carbon GCP region."
+public: true
+definition:
+  version: v1
+  environment: ambient
+
+  components:
+    - name: "planner"
+      type: AgentComponent
+      prompt_id: "planner_prompt"
+      inputs:
+        - "context:goal"
+      toolset: ["read_file", "read_files"]
+      ui_log_events:
+        - on_agent_final_answer
+
+    - name: "security_review"
+      type: AgentComponent
+      prompt_id: "security_prompt"
+      inputs:
+        - "context:goal"
+        - "planner:output"
+      toolset: ["read_file", "read_files"]
+      ui_log_events:
+        - on_agent_final_answer
+
+  prompts:
+    - prompt_id: "planner_prompt"
+      name: "Planner Prompt"
+      prompt_template:
+        system: |
+          You are the Rivet Planner Agent. Analyze the provided Jira issue and generate a structured execution plan in JSON format with steps, effort estimates, risk assessment, and success criteria.
+        user: |
+          {{goal}}
+        placeholder: history
+      unit_primitives: []
+      params:
+        timeout: 180
+
+    - prompt_id: "security_prompt"
+      name: "Security Review Prompt"
+      prompt_template:
+        system: |
+          You are the Rivet Security Analyst. Review the code changes for OWASP Top 10 vulnerabilities, prompt injection risks, secret leakage, and compliance. Output severity-rated findings in JSON.
+        user: |
+          Review the following plan and code:
+          {{goal}}
+        placeholder: history
+      unit_primitives: []
+      params:
+        timeout: 180
+
+  routers:
+    - from: "planner"
+      to: "security_review"
+    - from: "security_review"
+      to: "end"
+
+  flow:
+    entry_point: "planner"
