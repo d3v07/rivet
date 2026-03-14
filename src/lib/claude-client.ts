@@ -1,26 +1,41 @@
 /**
- * Claude API client for agent LLM calls
- * Wraps @anthropic-ai/sdk with token tracking and graceful fallback
+ * LLM client for agent AI calls
+ * Uses Google Gemini via @google/genai with token tracking and graceful fallback
+ * Supports both Gemini API (API key) and Vertex AI (GCP project)
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenAI } from '@google/genai';
 import { recordInvocation, estimateTokens } from '@/lib/token-tracker';
 import { logInfo, logError, type LogContext } from '@/lib/logger';
 
-let clientInstance: Anthropic | null = null;
+let clientInstance: GoogleGenAI | null = null;
 
-function getClient(): Anthropic | null {
+function getClient(): GoogleGenAI | null {
   if (clientInstance) return clientInstance;
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return null;
+  const geminiKey = process.env.GEMINI_API_KEY;
+  const gcpProject = process.env.GCP_PROJECT_ID;
+  const gcpLocation = process.env.GCP_LOCATION || 'us-central1';
 
-  clientInstance = new Anthropic({ apiKey });
-  return clientInstance;
+  if (geminiKey) {
+    clientInstance = new GoogleGenAI({ apiKey: geminiKey });
+    return clientInstance;
+  }
+
+  if (gcpProject) {
+    clientInstance = new GoogleGenAI({
+      vertexai: true,
+      project: gcpProject,
+      location: gcpLocation,
+    });
+    return clientInstance;
+  }
+
+  return null;
 }
 
 export function isClaudeAvailable(): boolean {
-  return !!process.env.ANTHROPIC_API_KEY;
+  return !!(process.env.GEMINI_API_KEY || process.env.GCP_PROJECT_ID);
 }
 
 export interface ClaudeRequest {
@@ -40,7 +55,7 @@ export interface ClaudeResponse {
 }
 
 /**
- * Call Claude API with structured prompt, token tracking, and error handling
+ * Call Gemini API with structured prompt, token tracking, and error handling
  */
 export async function callClaude(request: ClaudeRequest): Promise<ClaudeResponse> {
   const client = getClient();
@@ -50,67 +65,66 @@ export async function callClaude(request: ClaudeRequest): Promise<ClaudeResponse
   };
 
   if (!client) {
-    logInfo('Claude API not available, using deterministic fallback', context);
-    throw new ClaudeUnavailableError('ANTHROPIC_API_KEY not configured');
+    logInfo('Gemini API not available, using deterministic fallback', context);
+    throw new ClaudeUnavailableError('GEMINI_API_KEY or GCP_PROJECT_ID not configured');
   }
 
   const startTime = Date.now();
 
   try {
-    logInfo('Calling Claude API', {
+    logInfo('Calling Gemini API', {
       ...context,
       promptLength: request.prompt.length,
       maxTokens: request.maxTokens ?? 4096,
     });
 
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: request.maxTokens ?? 4096,
-      temperature: request.temperature ?? 0.3,
-      system: request.system,
-      messages: [{ role: 'user', content: request.prompt }],
+    const response = await client.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: `${request.system}\n\n${request.prompt}`,
+      config: {
+        maxOutputTokens: request.maxTokens ?? 4096,
+        temperature: request.temperature ?? 0.3,
+      },
     });
 
-    const textContent = response.content
-      .filter((block): block is Anthropic.TextBlock => block.type === 'text')
-      .map((block) => block.text)
-      .join('\n');
+    const textContent = response.text ?? '';
+    const inputTokens = response.usageMetadata?.promptTokenCount ?? estimateTokens(request.prompt);
+    const outputTokens = response.usageMetadata?.candidatesTokenCount ?? estimateTokens(textContent);
 
     const latencyMs = Date.now() - startTime;
 
     recordInvocation({
-      toolName: `claude_api:${request.toolName}`,
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
+      toolName: `gemini_api:${request.toolName}`,
+      inputTokens,
+      outputTokens,
       latencyMs,
       timestamp: new Date().toISOString(),
       correlationId: request.correlationId,
       status: 'success',
     });
 
-    logInfo('Claude API response received', {
+    logInfo('Gemini API response received', {
       ...context,
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
-      stopReason: response.stop_reason,
+      inputTokens,
+      outputTokens,
       latencyMs,
     });
 
     return {
       content: textContent,
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
-      stopReason: response.stop_reason,
+      inputTokens,
+      outputTokens,
+      stopReason: null,
     };
   } catch (error) {
     const latencyMs = Date.now() - startTime;
 
     if (error instanceof ClaudeUnavailableError) throw error;
 
-    logError('Claude API call failed', context, error as Error);
+    logError('Gemini API call failed', context, error as Error);
 
     recordInvocation({
-      toolName: `claude_api:${request.toolName}`,
+      toolName: `gemini_api:${request.toolName}`,
       inputTokens: estimateTokens(request.prompt),
       outputTokens: 0,
       latencyMs,
@@ -132,7 +146,7 @@ export class ClaudeUnavailableError extends Error {
 }
 
 /**
- * Call Claude with JSON output parsing
+ * Call Gemini with JSON output parsing
  */
 export async function callClaudeJson<T>(
   request: ClaudeRequest,

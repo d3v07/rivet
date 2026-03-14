@@ -6,34 +6,42 @@ import {
   resetClient,
 } from '@/lib/claude-client';
 
-describe('claude-client', () => {
-  const originalEnv = process.env.ANTHROPIC_API_KEY;
+describe('llm-client', () => {
+  const originalGeminiKey = process.env.GEMINI_API_KEY;
+  const originalGcpProject = process.env.GCP_PROJECT_ID;
 
   beforeEach(() => {
     resetClient();
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.GCP_PROJECT_ID;
   });
 
   afterEach(() => {
-    process.env.ANTHROPIC_API_KEY = originalEnv;
+    if (originalGeminiKey) process.env.GEMINI_API_KEY = originalGeminiKey;
+    else delete process.env.GEMINI_API_KEY;
+    if (originalGcpProject) process.env.GCP_PROJECT_ID = originalGcpProject;
+    else delete process.env.GCP_PROJECT_ID;
     resetClient();
   });
 
   describe('isClaudeAvailable', () => {
-    it('should return false when no API key', () => {
-      delete process.env.ANTHROPIC_API_KEY;
+    it('should return false when no API key or GCP project', () => {
       expect(isClaudeAvailable()).toBe(false);
     });
 
-    it('should return true when API key is set', () => {
-      process.env.ANTHROPIC_API_KEY = 'test-key';
+    it('should return true when GEMINI_API_KEY is set', () => {
+      process.env.GEMINI_API_KEY = 'test-key';
+      expect(isClaudeAvailable()).toBe(true);
+    });
+
+    it('should return true when GCP_PROJECT_ID is set', () => {
+      process.env.GCP_PROJECT_ID = 'test-project';
       expect(isClaudeAvailable()).toBe(true);
     });
   });
 
   describe('callClaude', () => {
-    it('should throw ClaudeUnavailableError when no API key', async () => {
-      delete process.env.ANTHROPIC_API_KEY;
-
+    it('should throw ClaudeUnavailableError when no credentials', async () => {
       await expect(
         callClaude({
           system: 'test',
@@ -45,8 +53,6 @@ describe('claude-client', () => {
     });
 
     it('should throw ClaudeUnavailableError with correct message', async () => {
-      delete process.env.ANTHROPIC_API_KEY;
-
       try {
         await callClaude({
           system: 'test',
@@ -56,7 +62,7 @@ describe('claude-client', () => {
         });
       } catch (error) {
         expect(error).toBeInstanceOf(ClaudeUnavailableError);
-        expect((error as Error).message).toContain('ANTHROPIC_API_KEY');
+        expect((error as Error).message).toContain('GEMINI_API_KEY');
       }
     });
   });
