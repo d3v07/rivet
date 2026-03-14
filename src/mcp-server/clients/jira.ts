@@ -95,10 +95,15 @@ export class JiraClient {
     maxResults: number = 10,
     correlationId: string = createCorrelationId()
   ): Promise<JiraIssue[]> {
-    let jql = `project = ${projectKey}`;
+    if (!/^[A-Z][A-Z0-9]{1,9}$/.test(projectKey)) {
+      throw new Error(`Invalid Jira project key: ${projectKey}`);
+    }
+
+    let jql = `project = "${projectKey}"`;
 
     if (status) {
-      jql += ` AND status = "${status}"`;
+      const sanitizedStatus = status.replace(/"/g, '\\"');
+      jql += ` AND status = "${sanitizedStatus}"`;
     }
 
     return this.fetchIssues(jql, maxResults, correlationId);

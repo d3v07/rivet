@@ -9,7 +9,12 @@ import { z } from 'zod';
  * Input schema for query_jira_backlog tool
  */
 export const QueryJiraBacklogInputSchema = z.object({
-  projectKey: z.string().min(1).max(10).describe('Jira project key (e.g., PROJ)'),
+  projectKey: z
+    .string()
+    .min(1)
+    .max(10)
+    .regex(/^[A-Z][A-Z0-9]{1,9}$/, 'Must be a valid Jira project key (e.g., PROJ)')
+    .describe('Jira project key (e.g., PROJ)'),
   statusFilter: z
     .enum(['Ready for Engineering', 'In Progress', 'Done', 'Backlog'])
     .optional()
