@@ -13,7 +13,7 @@
 |-------|-----------|
 | **MCP Server** | Node.js 18+, TypeScript, `@modelcontextprotocol/sdk` |
 | **Agent Platform** | GitLab Duo Agent Platform (Premium/Ultimate) |
-| **Agent Models** | Anthropic Claude 3.5 Sonnet, GitLab native agents |
+| **Agent Models** | Ollama (local), Gemini 2.0 Flash (API), Vertex AI (GCP), GitLab native agents |
 | **External APIs** | Jira REST v3, GCP BigQuery, Cloud Billing |
 | **CI/CD** | GitLab CI (shared runners), `.gitlab-ci.yml` |
 | **Testing** | Vitest, 80% coverage minimum |
@@ -98,7 +98,7 @@ All AI agents MUST follow:
 ### Required (once GitLab group access arrives)
 
 - **GitLab Premium/Ultimate** group with Duo Agent Platform enabled
-- **Anthropic API key** (console.anthropic.com)
+- **Gemini API key** (aistudio.google.com) or **Ollama** running locally
 - **Jira Cloud** free instance + API token
 - **GCP project** + service account key
 - **glab CLI** installed locally (`brew install glab`)
