@@ -4,6 +4,7 @@
  */
 
 import { createCorrelationId, logInfo, logError } from '@/lib/logger';
+import { callClaudeJson, ClaudeUnavailableError, isClaudeAvailable } from '@/lib/claude-client';
 import type { JiraIssue, ExecutionPlan, ExecutionStep } from '@/types/index';
 import { z } from 'zod';
 
@@ -51,15 +52,35 @@ export class PlannerAgent {
     });
 
     try {
-      // Parse issue content to determine complexity
+      // Try Claude-powered planning first, fall back to deterministic
+      if (isClaudeAvailable()) {
+        try {
+          const aiPlan = await this.planWithClaude(issue);
+          logInfo('Planner: used Claude API for planning', {
+            correlationId: this.correlationId,
+            issueKey: issue.key,
+            stepCount: aiPlan.steps.length,
+          });
+          return aiPlan;
+        } catch (error) {
+          if (!(error instanceof ClaudeUnavailableError)) {
+            logError(
+              'Planner: Claude API failed, using deterministic fallback',
+              {
+                correlationId: this.correlationId,
+              },
+              error as Error
+            );
+          }
+        }
+      }
+
+      // Deterministic fallback
       const complexity = this.assessComplexity(issue);
       const riskLevel = this.assessRisk(issue);
       const dependencies = this.identifyDependencies(issue);
 
-      // Generate steps based on issue type and complexity
       const steps = this.generateSteps(issue, complexity);
-
-      // Estimate total time
       const totalTime = this.estimateTotalTime(steps);
 
       const plan: ExecutionPlan = {
@@ -75,7 +96,6 @@ export class PlannerAgent {
         dependencies: dependencies.requires.length > 0 ? dependencies.requires : undefined,
       };
 
-      // Validate plan against schema
       const validatedPlan = ExecutionPlanSchema.parse(plan);
 
       logInfo('Planner: plan generated', {
@@ -95,6 +115,77 @@ export class PlannerAgent {
       );
       throw error;
     }
+  }
+
+  /**
+   * Generate plan using Claude API
+   */
+  private async planWithClaude(issue: JiraIssue): Promise<ExecutionPlan> {
+    const system = `You are a senior software architect planning implementation tasks.
+Given a Jira issue, produce a structured execution plan following TDD methodology.
+Each plan must include: requirements review, test writing (RED), implementation (GREEN),
+refactoring, verification, and commit steps. Add design and deployment steps for complex issues.`;
+
+    const prompt = `Plan this Jira issue:
+
+Key: ${issue.key}
+Summary: ${issue.summary}
+Description: ${issue.description || 'No description'}
+Priority: ${issue.priority || 'Medium'}
+Status: ${issue.status}
+
+Return a JSON object with this exact structure:
+{
+  "steps": [
+    {
+      "stepNumber": 1,
+      "action": "descriptive action (10+ chars)",
+      "effort": "small|medium|large",
+      "risk": "low|medium|high",
+      "successCriteria": ["criterion 1", "criterion 2"],
+      "estimatedTime": "N minutes"
+    }
+  ],
+  "totalEstimatedTime": "N hours M minutes",
+  "riskSummary": "Overall risk assessment",
+  "blockersSummary": "Any blockers or null"
+}`;
+
+    const result = await callClaudeJson(
+      {
+        system,
+        prompt,
+        maxTokens: 2048,
+        temperature: 0.3,
+        correlationId: this.correlationId,
+        toolName: 'planner',
+      },
+      (raw) => JSON.parse(raw)
+    );
+
+    const steps: ExecutionStep[] = result.steps.map((s: Record<string, unknown>, i: number) => ({
+      stepNumber: i + 1,
+      action: String(s.action),
+      effort: String(s.effort) as 'small' | 'medium' | 'large',
+      risk: String(s.risk) as 'low' | 'medium' | 'high',
+      successCriteria: Array.isArray(s.successCriteria)
+        ? s.successCriteria.map(String)
+        : ['Completed successfully'],
+      estimatedTime: String(s.estimatedTime),
+    }));
+
+    const plan: ExecutionPlan = {
+      planId: `plan-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      issueKey: issue.key,
+      title: issue.summary,
+      description: issue.description || undefined,
+      steps,
+      totalEstimatedTime: String(result.totalEstimatedTime),
+      riskSummary: String(result.riskSummary),
+      blockersSummary: result.blockersSummary ? String(result.blockersSummary) : undefined,
+    };
+
+    return ExecutionPlanSchema.parse(plan);
   }
 
   /**
