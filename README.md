@@ -10,7 +10,7 @@ AI models can generate thousands of lines of code in seconds. But human-driven v
 
 Rivet solves this by autonomously handling the entire pipeline:
 - **Contextual Planning**: Read unstructured Jira requirements, generate structured execution plans
-- **Code Generation**: Write application code via Anthropic Claude API
+- **Code Generation**: Write application code via multi-provider LLM integration (Ollama/Gemini/Vertex)
 - **Security Auditing**: Scan code for OWASP vulnerabilities, auto-generate patches
 - **Intelligent Deployment**: Query GCP carbon intensity, deploy to lowest-carbon regions
 - **Compliance Tracking**: Generate Pipeline Bill of Materials (PBOM) for every run
@@ -24,7 +24,7 @@ All without human intervention, unless a critical issue requires manual review.
     ↓
 [Contextual Planner Agent] (MCP Client → Jira)
     ↓ (structured execution plan)
-[Developer Agent] (external Anthropic Claude API)
+[Developer Agent] (LLM: Ollama/Gemini/Vertex)
     ↓ (committed code)
 [Security Analyst Agent] (OWASP scanning)
     ↓ (approved or halted with human review)
@@ -49,7 +49,7 @@ All without human intervention, unless a critical issue requires manual review.
 |-------|-------------|
 | **General Prize Pool** | GitLab Duo Agent Platform, MCP integration, custom agents |
 | **Google Cloud + GitLab ($13.5k)** | Carbon-aware deployment via GCP BigQuery + Billing APIs |
-| **Anthropic via GitLab ($13.5k)** | Developer Agent uses Claude 3.5 Sonnet for code generation |
+| **Anthropic via GitLab ($13.5k)** | Developer Agent uses multi-provider LLM (Ollama/Gemini/Vertex) for code generation |
 | **Green Agents ($3k)** | Token efficiency tracking, context window optimization, carbon scoring |
 
 ## Getting Started
@@ -130,7 +130,7 @@ The orchestration flow is defined in `rivet-flow.yaml`:
 
 1. **Event Trigger**: Issue labeled "Rivet-Execute" → flow starts
 2. **Planner Stage**: Reads Jira issue, cross-references AGENTS.md, produces structured JSON execution plan
-3. **Developer Stage**: Consumes plan, generates code via Anthropic API, commits to feature branch
+3. **Developer Stage**: Consumes plan, generates code via LLM (Ollama/Gemini/Vertex), commits to feature branch
 4. **Security Stage**: Scans committed code, auto-patches fixable issues, blocks critical vulnerabilities
 5. **Deployer Stage**: Analyzes GCP carbon/pricing, selects optimal region, deploys
 6. **Fallback**: If security or deployment fails, creates human-review issue with full context
@@ -199,7 +199,7 @@ Proprietary (2026 GitLab AI Hackathon Submission)
 
 This project leverages:
 - **GitLab Duo Agent Platform** — foundational multi-agent orchestration
-- **Anthropic Claude API** — code generation and reasoning
+- **Multi-provider LLM integration** (Ollama, Gemini, Vertex AI) — code generation and reasoning
 - **Google Cloud Platform** — infrastructure and carbon data
 - **Model Context Protocol** — secure external API integration
 
