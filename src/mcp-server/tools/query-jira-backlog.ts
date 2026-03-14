@@ -30,8 +30,18 @@ export async function executeQueryJiraBacklog(input: unknown): Promise<QueryJira
 
     if (!jiraBaseUrl || !jiraEmail || !jiraToken) {
       logInfo('Using mock Jira data (credentials not configured)', { correlationId });
-      // Return mock data for development
-      return createMockResponse();
+      const mockResult = createMockResponse();
+      const latencyMs = Date.now() - startTime;
+      recordInvocation({
+        toolName: 'query_jira_backlog',
+        inputTokens: estimateTokens(JSON.stringify(validatedInput)),
+        outputTokens: estimateTokens(JSON.stringify(mockResult)),
+        latencyMs,
+        timestamp: new Date().toISOString(),
+        correlationId,
+        status: 'success',
+      });
+      return mockResult;
     }
 
     const jiraClient = new JiraClient(jiraBaseUrl, jiraEmail, jiraToken);

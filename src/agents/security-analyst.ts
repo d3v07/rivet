@@ -145,22 +145,25 @@ export class SecurityAnalystAgent {
   private checkSecrets(path: string, content: string): SecurityFinding[] {
     const findings: SecurityFinding[] = [];
 
-    // Look for common secret patterns
+    // Look for common secret patterns (both JSON-style and variable assignment)
     const secretPatterns = [
       {
-        pattern: /(['"])(password|passwd|pwd)(['"])\s*[:=]\s*['"][^'"]+['"]/gi,
+        pattern:
+          /(?:const|let|var|['"])\s*(?:password|passwd|pwd)\s*(?:['"])?\s*[:=]\s*['"][^'"]+['"]/i,
         name: 'Hardcoded password',
       },
       {
-        pattern: /(['"])(api[-_]?key|apikey)(['"])\s*[:=]\s*['"][^'"]+['"]/gi,
+        pattern:
+          /(?:const|let|var|['"])\s*(?:api[-_]?key|apikey|apiKey)\s*(?:['"])?\s*[:=]\s*['"][^'"]+['"]/i,
         name: 'Hardcoded API key',
       },
       {
-        pattern: /(['"])(token|secret)(['"])\s*[:=]\s*['"][^'"]+['"]/gi,
+        pattern: /(?:const|let|var|['"])\s*(?:token|secret)\s*(?:['"])?\s*[:=]\s*['"][^'"]+['"]/i,
         name: 'Hardcoded token/secret',
       },
       {
-        pattern: /(['"])(client[-_]?secret)(['"])\s*[:=]\s*['"][^'"]+['"]/gi,
+        pattern:
+          /(?:const|let|var|['"])\s*(?:client[-_]?secret)\s*(?:['"])?\s*[:=]\s*['"][^'"]+['"]/i,
         name: 'Hardcoded client secret',
       },
     ];
@@ -190,9 +193,10 @@ export class SecurityAnalystAgent {
 
     // Look for string concatenation in SQL queries
     const sqlPatterns = [
-      /sql\s*[`'"]+\s*\+\s*/gi,
-      /query\s*=\s*[`'"][^`'"]*"\s*\+\s*/gi,
-      /execute\s*\(\s*[`'"][^`'"]*"\s*\+\s*/gi,
+      /(?:sql|SELECT|INSERT|UPDATE|DELETE)\s*[`'"]\s*\+/i,
+      /query\s*=\s*[`'"].*[`'"]\s*\+/i,
+      /execute\s*\(\s*[`'"].*[`'"]\s*\+/i,
+      /[`'"]SELECT\s.*[`'"]\s*\+/i,
     ];
 
     sqlPatterns.forEach((pattern) => {
