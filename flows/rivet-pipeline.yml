@@ -12,6 +12,21 @@ definition:
       inputs:
         - "context:goal"
       toolset: ["read_file", "read_files"]
+      mcp_tools:
+        - query_jira_backlog
+        - plan_issue
+      ui_log_events:
+        - on_agent_final_answer
+
+    - name: "developer"
+      type: AgentComponent
+      prompt_id: "developer_prompt"
+      inputs:
+        - "context:goal"
+        - "planner:output"
+      toolset: ["read_file", "read_files"]
+      mcp_tools:
+        - execute_plan
       ui_log_events:
         - on_agent_final_answer
 
@@ -20,8 +35,23 @@ definition:
       prompt_id: "security_prompt"
       inputs:
         - "context:goal"
-        - "planner:output"
+        - "developer:output"
       toolset: ["read_file", "read_files"]
+      mcp_tools:
+        - review_code
+      ui_log_events:
+        - on_agent_final_answer
+
+    - name: "deployer"
+      type: AgentComponent
+      prompt_id: "deployer_prompt"
+      inputs:
+        - "context:goal"
+        - "security_review:output"
+      toolset: ["read_file", "read_files"]
+      mcp_tools:
+        - fetch_gcp_carbon_metrics
+        - get_compute_pricing
       ui_log_events:
         - on_agent_final_answer
 
@@ -38,23 +68,53 @@ definition:
       params:
         timeout: 180
 
+    - prompt_id: "developer_prompt"
+      name: "Developer Prompt"
+      prompt_template:
+        system: |
+          You are the Rivet Developer Agent. Execute the provided plan using TDD methodology (RED → GREEN → REFACTOR). Generate code, tests, and commit messages for each step.
+        user: |
+          Execute the following plan:
+          {{goal}}
+        placeholder: history
+      unit_primitives: []
+      params:
+        timeout: 300
+
     - prompt_id: "security_prompt"
       name: "Security Review Prompt"
       prompt_template:
         system: |
           You are the Rivet Security Analyst. Review the code changes for OWASP Top 10 vulnerabilities, prompt injection risks, secret leakage, and compliance. Output severity-rated findings in JSON.
         user: |
-          Review the following plan and code:
+          Review the following code changes:
           {{goal}}
         placeholder: history
       unit_primitives: []
       params:
         timeout: 180
 
+    - prompt_id: "deployer_prompt"
+      name: "Deployer Prompt"
+      prompt_template:
+        system: |
+          You are the Rivet Deployer Agent. Select the optimal GCP region for deployment based on carbon intensity (70% weight) and compute cost (30% weight). Generate deployment configuration.
+        user: |
+          Deploy the following approved code:
+          {{goal}}
+        placeholder: history
+      unit_primitives: []
+      params:
+        timeout: 120
+
   routers:
     - from: "planner"
+      to: "developer"
+    - from: "developer"
       to: "security_review"
     - from: "security_review"
+      to: "deployer"
+    - from: "deployer"
       to: "end"
 
   flow:

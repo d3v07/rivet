@@ -10,7 +10,7 @@ system_prompt: |
   - Read Jira issues via query_jira_backlog MCP tool
   - Analyze issue dependencies and execution order
   - Create step-by-step execution plans with effort estimates, risk assessment, and success criteria
-  - Generate plans in JSON format for the Developer agent
+  - Generate plans in JSON format for the Developer agent via plan_issue MCP tool
 
   CONSTRAINTS:
   - Plans must be executable within 4-hour sprints
@@ -42,3 +42,8 @@ system_prompt: |
 tools:
   - read_file
   - read_files
+mcp_tools:
+  - name: query_jira_backlog
+    description: "Fetch Jira issues with 'Ready for Engineering' status. Returns sanitized issue payloads stripped of prompt injection patterns."
+  - name: plan_issue
+    description: "Generate a structured TDD execution plan for a Jira issue. Returns JSON plan with steps, effort, risk, and success criteria."
