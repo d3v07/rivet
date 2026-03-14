@@ -1,77 +1,74 @@
 export interface PBOMInput {
-  readonly pipelineId: string
-  readonly correlationId: string
-  readonly trigger: { readonly type: string; readonly issueKey: string }
+  readonly pipelineId: string;
+  readonly correlationId: string;
+  readonly trigger: { readonly type: string; readonly issueKey: string };
   readonly agents: ReadonlyArray<{
-    readonly name: string
-    readonly model: string
-    readonly provider: string
-  }>
+    readonly name: string;
+    readonly model: string;
+    readonly provider: string;
+  }>;
   readonly tools: ReadonlyArray<{
-    readonly name: string
-    readonly invocations: number
-    readonly totalTokens: number
-  }>
+    readonly name: string;
+    readonly invocations: number;
+    readonly totalTokens: number;
+  }>;
   readonly tokenMetrics: {
-    readonly totalInputTokens: number
-    readonly totalOutputTokens: number
-    readonly totalLatencyMs: number
-  }
+    readonly totalInputTokens: number;
+    readonly totalOutputTokens: number;
+    readonly totalLatencyMs: number;
+  };
   readonly stages: ReadonlyArray<{
-    readonly name: string
-    readonly status: 'success' | 'failed'
-    readonly durationMs: number
-  }>
+    readonly name: string;
+    readonly status: 'success' | 'failed';
+    readonly durationMs: number;
+  }>;
 }
 
 export interface PBOM {
-  readonly version: string
-  readonly pipelineId: string
-  readonly correlationId: string
-  readonly generatedAt: string
-  readonly trigger: { readonly type: string; readonly issueKey: string }
+  readonly version: string;
+  readonly pipelineId: string;
+  readonly correlationId: string;
+  readonly generatedAt: string;
+  readonly trigger: { readonly type: string; readonly issueKey: string };
   readonly agents: ReadonlyArray<{
-    readonly name: string
-    readonly model: string
-    readonly provider: string
-  }>
+    readonly name: string;
+    readonly model: string;
+    readonly provider: string;
+  }>;
   readonly tools: ReadonlyArray<{
-    readonly name: string
-    readonly invocations: number
-    readonly totalTokens: number
-  }>
+    readonly name: string;
+    readonly invocations: number;
+    readonly totalTokens: number;
+  }>;
   readonly tokenMetrics: {
-    readonly totalInputTokens: number
-    readonly totalOutputTokens: number
-    readonly totalLatencyMs: number
-    readonly efficiency: number
-  }
+    readonly totalInputTokens: number;
+    readonly totalOutputTokens: number;
+    readonly totalLatencyMs: number;
+    readonly efficiency: number;
+  };
   readonly stages: ReadonlyArray<{
-    readonly name: string
-    readonly status: 'success' | 'failed'
-    readonly durationMs: number
-  }>
-  readonly totalDurationMs: number
-  readonly overallStatus: 'success' | 'failed'
+    readonly name: string;
+    readonly status: 'success' | 'failed';
+    readonly durationMs: number;
+  }>;
+  readonly totalDurationMs: number;
+  readonly overallStatus: 'success' | 'failed';
   readonly environment: {
-    readonly nodeVersion: string
-    readonly platform: string
-    readonly rivetVersion: string
-  }
+    readonly nodeVersion: string;
+    readonly platform: string;
+    readonly rivetVersion: string;
+  };
 }
 
 export function generatePBOM(input: PBOMInput): PBOM {
-  const totalDurationMs = input.stages.reduce(
-    (sum, stage) => sum + stage.durationMs,
-    0
-  )
+  const totalDurationMs = input.stages.reduce((sum, stage) => sum + stage.durationMs, 0);
 
-  const overallStatus = input.stages.some((s) => s.status === 'failed')
-    ? 'failed'
-    : 'success'
+  const overallStatus = input.stages.some((s) => s.status === 'failed') ? 'failed' : 'success';
 
   const efficiency =
-    input.tokenMetrics.totalOutputTokens / input.tokenMetrics.totalInputTokens
+    input.tokenMetrics.totalInputTokens > 0
+      ? input.tokenMetrics.totalOutputTokens / input.tokenMetrics.totalInputTokens
+      : 0;
 
   const pbom: PBOM = {
     version: '1.0.0',
@@ -95,7 +92,7 @@ export function generatePBOM(input: PBOMInput): PBOM {
       platform: process.platform,
       rivetVersion: '0.1.0',
     },
-  }
+  };
 
-  return Object.freeze(pbom)
+  return Object.freeze(pbom);
 }

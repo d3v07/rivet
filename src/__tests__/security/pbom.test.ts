@@ -104,6 +104,15 @@ describe('PBOM Generator', () => {
       expect(pbom.overallStatus).toBe('failed');
     });
 
+    it('should return zero efficiency when input tokens are zero', () => {
+      const input: PBOMInput = {
+        ...baseInput,
+        tokenMetrics: { totalInputTokens: 0, totalOutputTokens: 0, totalLatencyMs: 0 },
+      };
+      const pbom = generatePBOM(input);
+      expect(pbom.tokenMetrics.efficiency).toBe(0);
+    });
+
     it('should include runtime environment info', () => {
       const pbom = generatePBOM(baseInput);
 
