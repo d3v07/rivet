@@ -4,6 +4,7 @@
  */
 
 import { createCorrelationId, logInfo, logError } from '@/lib/logger';
+import { callClaude, ClaudeUnavailableError, isClaudeAvailable } from '@/lib/claude-client';
 import type { ExecutionPlan, ExecutionStep } from '@/types/index';
 import { z } from 'zod';
 
@@ -201,11 +202,35 @@ export class DeveloperAgent {
       issueKey: plan.issueKey,
     });
 
-    // Generate test file path based on issue
     const testFilePath = this.generateTestFilePath(plan.issueKey);
 
-    // In production, this would call Claude API to generate tests
-    // For now, we simulate test generation
+    if (isClaudeAvailable()) {
+      try {
+        const response = await callClaude({
+          system: `You are a senior TypeScript developer writing tests using Vitest.
+Write failing tests (RED phase of TDD) for the given task. Tests should cover:
+- Happy path, edge cases, error cases
+- Use describe/it/expect from vitest
+- Be specific and testable`,
+          prompt: `Write tests for: ${plan.title}\nDescription: ${plan.description || plan.issueKey}\nAcceptance criteria from plan steps:\n${plan.steps.map((s) => `- ${s.action}: ${s.successCriteria.join(', ')}`).join('\n')}`,
+          maxTokens: 2048,
+          correlationId: this.correlationId,
+          toolName: 'developer:test_gen',
+        });
+        return `Generated test file: ${testFilePath}\n${response.content}`;
+      } catch (error) {
+        if (!(error instanceof ClaudeUnavailableError)) {
+          logError(
+            'Developer: Claude test gen failed, using fallback',
+            {
+              correlationId: this.correlationId,
+            },
+            error as Error
+          );
+        }
+      }
+    }
+
     const testContent = `/**
  * Tests for ${plan.title}
  * Issue: ${plan.issueKey}
@@ -233,8 +258,29 @@ describe('${this.sanitizeTestName(plan.title)}', () => {
       stepNumber: step.stepNumber,
     });
 
-    // In production, this would call Claude API to generate implementation
     const fileName = this.generateFileName(plan.issueKey);
+
+    if (isClaudeAvailable()) {
+      try {
+        const response = await callClaude({
+          system: `You are a senior TypeScript developer implementing minimal code to pass tests (GREEN phase of TDD).
+Write clean, production-ready TypeScript. Follow SOLID principles. No over-engineering.`,
+          prompt: `Implement code for: ${plan.title}\nStep: ${step.action}\nSuccess criteria: ${step.successCriteria.join(', ')}\nEffort: ${step.effort}`,
+          maxTokens: 2048,
+          correlationId: this.correlationId,
+          toolName: 'developer:implement',
+        });
+        return `Generated implementation file: ${fileName}\n${response.content}`;
+      } catch (error) {
+        if (!(error instanceof ClaudeUnavailableError)) {
+          logError(
+            'Developer: Claude implementation failed, using fallback',
+            { correlationId: this.correlationId },
+            error as Error
+          );
+        }
+      }
+    }
 
     return `Generated implementation file: ${fileName}\nImplementation logic written to satisfy tests`;
   }

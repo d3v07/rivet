@@ -1,0 +1,36 @@
+{
+  "name": "rivet",
+  "version": "0.1.0",
+  "description": "Multi-agent DevSecOps pipeline for autonomous software delivery",
+  "transport": {
+    "type": "stdio",
+    "command": "npx",
+    "args": ["tsx", "src/mcp-server/index.ts"]
+  },
+  "tools": [
+    {
+      "name": "query_jira_backlog",
+      "description": "Fetch Jira issues tagged 'Ready for Engineering' with prompt injection sanitization"
+    },
+    {
+      "name": "plan_issue",
+      "description": "Generate structured TDD execution plan for a Jira issue"
+    },
+    {
+      "name": "execute_plan",
+      "description": "Execute an execution plan using the Developer agent"
+    },
+    {
+      "name": "review_code",
+      "description": "Security review for OWASP Top 10, secrets, and auth issues"
+    },
+    {
+      "name": "fetch_gcp_carbon_metrics",
+      "description": "Fetch carbon intensity metrics for GCP regions"
+    },
+    {
+      "name": "get_compute_pricing",
+      "description": "Get GCP compute pricing across regions and machine types"
+    }
+  ]
+}
