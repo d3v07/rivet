@@ -40,10 +40,10 @@ Jira Backlog
 
 ## Agent Responsibilities
 
-| Agent | Input | Output | Claude API |
-|-------|-------|--------|------------|
-| **Planner** | JiraIssue | ExecutionPlan (TDD steps) | Yes (with fallback) |
-| **Developer** | ExecutionPlan | DeveloperProgress (code) | Yes (with fallback) |
+| Agent | Input | Output | LLM Provider |
+|-------|-------|--------|---------------|
+| **Planner** | JiraIssue | ExecutionPlan (TDD steps) | Ollama/Gemini (with fallback) |
+| **Developer** | ExecutionPlan | DeveloperProgress (code) | Ollama/Gemini (with fallback) |
 | **Security** | Code files | SecurityReview (findings) | No (regex-based) |
 | **Deployer** | SecurityReview | DeploymentResult | No (scoring algo) |
 
@@ -69,7 +69,7 @@ Jira Backlog
 
 Token efficiency tracked at three levels:
 1. **Per-invocation**: Each MCP tool call records input/output tokens + latency
-2. **Per-agent**: Claude API calls tracked separately with `claude_api:` prefix
+2. **Per-agent**: LLM API calls tracked separately with `llm_api:` prefix
 3. **Aggregate**: Total tokens, avg latency, per-tool breakdown
 
 Carbon-aware deployment uses weighted scoring:
