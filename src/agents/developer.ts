@@ -154,24 +154,27 @@ export class DeveloperAgent {
     };
 
     try {
-      // Route to appropriate handler based on step content
-      if (step.action.toLowerCase().includes('test')) {
-        stepResult.result = await this.handleTestGeneration(step, plan);
-        stepResult.status = 'success';
-      } else if (step.action.toLowerCase().includes('implement')) {
+      const action = step.action.toLowerCase();
+
+      // Route to appropriate handler — more specific patterns first
+      if (action.includes('implement') || action.includes('green phase')) {
         stepResult.result = await this.handleImplementation(step, plan);
         stepResult.status = 'success';
-      } else if (step.action.toLowerCase().includes('refactor')) {
-        stepResult.result = await this.handleRefactoring(step, plan);
-        stepResult.status = 'success';
       } else if (
-        step.action.toLowerCase().includes('verify') ||
-        step.action.toLowerCase().includes('test suite')
+        action.includes('verify') ||
+        action.includes('test suite') ||
+        action.includes('lint')
       ) {
         stepResult.result = await this.handleVerification(step, plan);
         stepResult.status = 'success';
-      } else if (step.action.toLowerCase().includes('commit')) {
+      } else if (action.includes('refactor')) {
+        stepResult.result = await this.handleRefactoring(step, plan);
+        stepResult.status = 'success';
+      } else if (action.includes('commit')) {
         stepResult.result = await this.handleCommit(step, plan);
+        stepResult.status = 'success';
+      } else if (action.includes('test') || action.includes('red phase')) {
+        stepResult.result = await this.handleTestGeneration(step, plan);
         stepResult.status = 'success';
       } else {
         // Generic step execution

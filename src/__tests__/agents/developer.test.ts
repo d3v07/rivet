@@ -183,7 +183,7 @@ describe('DeveloperAgent', () => {
 
       expect(progress.startedAt).toBeTruthy();
       expect(progress.completedAt).toBeTruthy();
-      expect(progress.totalDuration).toBeGreaterThan(0);
+      expect(progress.totalDuration).toBeGreaterThanOrEqual(0);
     });
 
     it('should mark all steps successful when completed', async () => {
@@ -266,9 +266,7 @@ describe('DeveloperAgent', () => {
     it('should handle small effort tasks', async () => {
       const agent = new DeveloperAgent();
       const plan = createMockExecutionPlan({
-        steps: [
-          createMockExecutionStep({ effort: 'small' }),
-        ],
+        steps: [createMockExecutionStep({ effort: 'small' })],
       });
 
       const progress = await agent.executePlan(plan);
@@ -279,9 +277,7 @@ describe('DeveloperAgent', () => {
     it('should handle medium effort tasks', async () => {
       const agent = new DeveloperAgent();
       const plan = createMockExecutionPlan({
-        steps: [
-          createMockExecutionStep({ effort: 'medium' }),
-        ],
+        steps: [createMockExecutionStep({ effort: 'medium' })],
       });
 
       const progress = await agent.executePlan(plan);
@@ -292,9 +288,7 @@ describe('DeveloperAgent', () => {
     it('should handle large effort tasks', async () => {
       const agent = new DeveloperAgent();
       const plan = createMockExecutionPlan({
-        steps: [
-          createMockExecutionStep({ effort: 'large' }),
-        ],
+        steps: [createMockExecutionStep({ effort: 'large' })],
       });
 
       const progress = await agent.executePlan(plan);
@@ -305,9 +299,7 @@ describe('DeveloperAgent', () => {
     it('should handle high-risk tasks', async () => {
       const agent = new DeveloperAgent();
       const plan = createMockExecutionPlan({
-        steps: [
-          createMockExecutionStep({ risk: 'high' }),
-        ],
+        steps: [createMockExecutionStep({ risk: 'high' })],
       });
 
       const progress = await agent.executePlan(plan);

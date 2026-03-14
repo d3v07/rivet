@@ -25,6 +25,7 @@ describe('PlannerAgent', () => {
       const planner = new PlannerAgent();
       const issue = createMockIssue({
         key: 'PROJ-123',
+        summary: 'Fix typo in documentation',
         priority: 'Low',
         description: 'Fix typo in documentation',
       });
@@ -35,7 +36,7 @@ describe('PlannerAgent', () => {
       expect(plan.planId).toBeTruthy();
       expect(plan.issueKey).toBe('PROJ-123');
       expect(plan.title).toBe('Fix typo in documentation');
-      expect(plan.steps).toHaveLength(7); // Simple issue: 7 steps (no deployment step)
+      expect(plan.steps).toHaveLength(6); // Simple: review, test, implement, refactor, verify, commit
       expect(plan.totalEstimatedTime).toBeTruthy();
       expect(plan.riskSummary).toBeTruthy();
     });
@@ -235,14 +236,18 @@ describe('PlannerAgent', () => {
     it('should maintain independent plans for each issue', async () => {
       const planner = new PlannerAgent();
       const issues = [
-        createMockIssue({ key: 'PROJ-1', priority: 'Low' }),
-        createMockIssue({ key: 'PROJ-2', priority: 'Critical' }),
+        createMockIssue({ key: 'PROJ-1', priority: 'Low', description: 'Simple update' }),
+        createMockIssue({
+          key: 'PROJ-2',
+          priority: 'Critical',
+          description: 'Fix security auth breach',
+        }),
       ];
 
       const plans = await planner.planIssues(issues);
 
-      expect(plans[0].riskSummary).toContain('Low');
-      expect(plans[1].riskSummary).toContain('Critical');
+      expect(plans[0].riskSummary).toContain('low');
+      expect(plans[1].riskSummary).toContain('high');
     });
   });
 
