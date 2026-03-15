@@ -55,7 +55,8 @@ export async function executeQueryJiraBacklog(input: unknown): Promise<QueryJira
     );
 
     // Sanitize and clean the response
-    const cleaned = cleanExternalData({ issues, total: issues.length });
+    const cleaned = cleanExternalData(issues);
+    const sanitizedIssues = cleaned.data as unknown[];
 
     logInfo('query_jira_backlog executed', {
       correlationId,
@@ -66,7 +67,7 @@ export async function executeQueryJiraBacklog(input: unknown): Promise<QueryJira
 
     // Record token usage
     const inputTokens = estimateTokens(JSON.stringify(validatedInput));
-    const outputTokens = estimateTokens(JSON.stringify(cleaned.data));
+    const outputTokens = estimateTokens(JSON.stringify(sanitizedIssues));
     const latencyMs = Date.now() - startTime;
 
     recordInvocation({
@@ -80,7 +81,7 @@ export async function executeQueryJiraBacklog(input: unknown): Promise<QueryJira
     });
 
     const output = QueryJiraBacklogOutputSchema.parse({
-      issues: cleaned.data,
+      issues: sanitizedIssues,
       total: issues.length,
       sanitizationApplied: true,
     });
