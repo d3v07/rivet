@@ -8,10 +8,10 @@
 export interface JiraIssue {
   key: string;
   summary: string;
-  description: string | null;
+  description?: string | null;
   status: string;
-  priority: string | null;
-  assignee: string | null;
+  priority?: string | null;
+  assignee?: string | null;
   created: string;
   updated: string;
 }
