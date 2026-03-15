@@ -16,7 +16,7 @@ export const QueryJiraBacklogInputSchema = z.object({
     .regex(/^[A-Z][A-Z0-9]{1,9}$/, 'Must be a valid Jira project key (e.g., PROJ)')
     .describe('Jira project key (e.g., PROJ)'),
   statusFilter: z
-    .enum(['Ready for Engineering', 'In Progress', 'Done', 'Backlog'])
+    .enum(['Ready for Engineering', 'To Do', 'In Progress', 'Done', 'Backlog'])
     .optional()
     .describe('Filter by issue status'),
   maxResults: z.number().int().min(1).max(100).default(10).describe('Maximum results to return'),
@@ -31,12 +31,12 @@ export type QueryJiraBacklogInput = z.infer<typeof QueryJiraBacklogInputSchema>;
 export const JiraIssueSchema = z.object({
   key: z.string().describe('Jira issue key'),
   summary: z.string().describe('Issue summary/title'),
-  description: z.string().nullable().describe('Issue description'),
+  description: z.string().nullable().optional().describe('Issue description'),
   status: z.string().describe('Current status'),
-  priority: z.string().nullable().describe('Priority (High, Medium, Low)'),
-  assignee: z.string().nullable().describe('Assignee name'),
-  created: z.string().datetime().describe('Created timestamp'),
-  updated: z.string().datetime().describe('Updated timestamp'),
+  priority: z.string().nullable().optional().describe('Priority (High, Medium, Low)'),
+  assignee: z.string().nullable().optional().describe('Assignee name'),
+  created: z.string().describe('Created timestamp'),
+  updated: z.string().describe('Updated timestamp'),
 });
 
 export const QueryJiraBacklogOutputSchema = z.object({

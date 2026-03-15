@@ -23,7 +23,7 @@ export const TOOL_DEFINITIONS = [
         projectKey: { type: 'string', description: 'Jira project key (e.g., PROJ)' },
         statusFilter: {
           type: 'string',
-          enum: ['Ready for Engineering', 'In Progress', 'Done', 'Backlog'],
+          enum: ['Ready for Engineering', 'To Do', 'In Progress', 'Done', 'Backlog'],
           description: 'Filter by issue status',
         },
         maxResults: { type: 'number', description: 'Maximum results (1-100, default 10)' },

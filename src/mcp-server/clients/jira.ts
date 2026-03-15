@@ -7,6 +7,17 @@ import axios, { AxiosInstance } from 'axios';
 import { logInfo, logError, createCorrelationId } from '@/lib/logger';
 import type { JiraIssue } from '@/types/index';
 
+function extractAdfText(adf: unknown): string | null {
+  if (!adf) return null;
+  if (typeof adf === 'string') return adf;
+  if (typeof adf !== 'object') return null;
+  const node = adf as Record<string, unknown>;
+  if (node.type === 'text') return String(node.text || '');
+  const children = node.content as unknown[];
+  if (!Array.isArray(children)) return null;
+  return children.map(extractAdfText).filter(Boolean).join(' ') || null;
+}
+
 export class JiraClient {
   private client: AxiosInstance;
 
@@ -39,20 +50,11 @@ export class JiraClient {
         maxResults,
       });
 
-      const response = await this.client.get('/rest/api/3/search', {
+      const response = await this.client.get('/rest/api/3/search/jql', {
         params: {
           jql,
           maxResults,
-          fields: [
-            'key',
-            'summary',
-            'description',
-            'status',
-            'priority',
-            'assignee',
-            'created',
-            'updated',
-          ],
+          fields: 'summary,description,status,priority,assignee,created,updated',
         },
       });
 
@@ -61,7 +63,7 @@ export class JiraClient {
         return {
           key: String(issue.key),
           summary: String(fields?.summary || ''),
-          description: fields?.description ? String(fields.description) : null,
+          description: extractAdfText(fields?.description),
           status: String((fields?.status as Record<string, unknown>)?.name || 'Unknown'),
           priority: (fields?.priority as Record<string, unknown>)?.name
             ? String((fields.priority as Record<string, unknown>).name)
