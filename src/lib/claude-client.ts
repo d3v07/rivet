@@ -148,7 +148,7 @@ async function callGemini(request: ClaudeRequest, context: LogContext): Promise<
     });
 
     const response = await client.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       contents: `${request.system}\n\n${request.prompt}`,
       config: {
         maxOutputTokens: request.maxTokens ?? 4096,
@@ -158,7 +158,8 @@ async function callGemini(request: ClaudeRequest, context: LogContext): Promise<
 
     const textContent = response.text ?? '';
     const inputTokens = response.usageMetadata?.promptTokenCount ?? estimateTokens(request.prompt);
-    const outputTokens = response.usageMetadata?.candidatesTokenCount ?? estimateTokens(textContent);
+    const outputTokens =
+      response.usageMetadata?.candidatesTokenCount ?? estimateTokens(textContent);
     const latencyMs = Date.now() - startTime;
 
     recordInvocation({
