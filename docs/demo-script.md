@@ -50,7 +50,7 @@ Show: `mcp.json`, tool list from ListTools
 npx vitest run
 ```
 
-"134 tests across 12 files. Every agent, every tool, every security boundary tested. E2E pipeline test runs the full flow."
+"184 tests across 15 files. Every agent, every tool, every security boundary tested. E2E pipeline test runs the full flow."
 
 ## Key Talking Points
 
