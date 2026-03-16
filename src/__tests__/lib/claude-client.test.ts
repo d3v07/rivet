@@ -15,6 +15,7 @@ describe('llm-client', () => {
   const originalGcpProject = process.env.GCP_PROJECT_ID;
   const originalOllamaUrl = process.env.OLLAMA_BASE_URL;
   const originalOllamaModel = process.env.OLLAMA_MODEL;
+  const originalAnthropicKey = process.env.ANTHROPIC_API_KEY;
 
   beforeEach(() => {
     resetClient();
@@ -22,6 +23,7 @@ describe('llm-client', () => {
     delete process.env.GCP_PROJECT_ID;
     delete process.env.OLLAMA_BASE_URL;
     delete process.env.OLLAMA_MODEL;
+    delete process.env.ANTHROPIC_API_KEY;
   });
 
   afterEach(() => {
@@ -33,6 +35,8 @@ describe('llm-client', () => {
     else delete process.env.OLLAMA_BASE_URL;
     if (originalOllamaModel) process.env.OLLAMA_MODEL = originalOllamaModel;
     else delete process.env.OLLAMA_MODEL;
+    if (originalAnthropicKey) process.env.ANTHROPIC_API_KEY = originalAnthropicKey;
+    else delete process.env.ANTHROPIC_API_KEY;
     resetClient();
     vi.restoreAllMocks();
   });

@@ -5,14 +5,14 @@ const MOCK_PBOMS: readonly PBOM[] = Object.freeze([
   {
     version: '1.0.0',
     pipelineId: 'pipeline-001',
-    correlationId: 'corr-dev5-a1b2c3',
+    correlationId: 'corr-dev7-a1b2c3',
     generatedAt: '2026-03-14T10:30:00.000Z',
-    trigger: { type: 'jira', issueKey: 'DEV-5' },
+    trigger: { type: 'jira', issueKey: 'DEV-7' },
     agents: [
-      { name: 'PlannerAgent', model: 'gemini-2.0-flash', provider: 'google' },
-      { name: 'DeveloperAgent', model: 'gemini-2.0-flash', provider: 'google' },
-      { name: 'SecurityAgent', model: 'gemini-2.0-flash', provider: 'google' },
-      { name: 'DeployerAgent', model: 'gemini-2.0-flash', provider: 'google' },
+      { name: 'PlannerAgent', model: 'gemini-2.5-flash', provider: 'google' },
+      { name: 'DeveloperAgent', model: 'gemini-2.5-flash', provider: 'google' },
+      { name: 'SecurityAgent', model: 'gemini-2.5-flash', provider: 'google' },
+      { name: 'DeployerAgent', model: 'gemini-2.5-flash', provider: 'google' },
     ],
     tools: [
       { name: 'jira-query', invocations: 3, totalTokens: 1850 },
@@ -34,7 +34,7 @@ const MOCK_PBOMS: readonly PBOM[] = Object.freeze([
     totalDurationMs: 34500,
     overallStatus: 'success',
     environment: {
-      nodeVersion: 'v18.19.0',
+      nodeVersion: 'v20.11.0',
       platform: 'linux',
       rivetVersion: '0.1.0',
     },
@@ -42,13 +42,13 @@ const MOCK_PBOMS: readonly PBOM[] = Object.freeze([
   {
     version: '1.0.0',
     pipelineId: 'pipeline-002',
-    correlationId: 'corr-dev18-d4e5f6',
+    correlationId: 'corr-dev11-d4e5f6',
     generatedAt: '2026-03-14T14:15:00.000Z',
-    trigger: { type: 'jira', issueKey: 'DEV-18' },
+    trigger: { type: 'jira', issueKey: 'DEV-11' },
     agents: [
-      { name: 'PlannerAgent', model: 'gemini-2.0-flash', provider: 'google' },
-      { name: 'DeveloperAgent', model: 'gemini-2.0-flash', provider: 'google' },
-      { name: 'SecurityAgent', model: 'gemini-2.0-flash', provider: 'google' },
+      { name: 'PlannerAgent', model: 'gemini-2.5-flash', provider: 'google' },
+      { name: 'DeveloperAgent', model: 'gemini-2.5-flash', provider: 'google' },
+      { name: 'SecurityAgent', model: 'gemini-2.5-flash', provider: 'google' },
     ],
     tools: [
       { name: 'jira-query', invocations: 2, totalTokens: 1200 },
@@ -68,7 +68,7 @@ const MOCK_PBOMS: readonly PBOM[] = Object.freeze([
     totalDurationMs: 28900,
     overallStatus: 'failed',
     environment: {
-      nodeVersion: 'v18.19.0',
+      nodeVersion: 'v20.11.0',
       platform: 'linux',
       rivetVersion: '0.1.0',
     },
@@ -84,7 +84,9 @@ pbomRouter.get('/', (_req, res) => {
 pbomRouter.get('/:pipelineId', (req, res) => {
   const pbom = MOCK_PBOMS.find((p) => p.pipelineId === req.params.pipelineId);
   if (!pbom) {
-    res.status(404).json({ status: 'error', error: `No PBOM found for pipeline ${req.params.pipelineId}` });
+    res
+      .status(404)
+      .json({ status: 'error', error: `No PBOM found for pipeline ${req.params.pipelineId}` });
     return;
   }
   res.json({ status: 'ok', data: pbom });
@@ -93,7 +95,9 @@ pbomRouter.get('/:pipelineId', (req, res) => {
 pbomRouter.get('/:pipelineId/export', (req, res) => {
   const pbom = MOCK_PBOMS.find((p) => p.pipelineId === req.params.pipelineId);
   if (!pbom) {
-    res.status(404).json({ status: 'error', error: `No PBOM found for pipeline ${req.params.pipelineId}` });
+    res
+      .status(404)
+      .json({ status: 'error', error: `No PBOM found for pipeline ${req.params.pipelineId}` });
     return;
   }
   const filename = `pbom-${pbom.pipelineId}-${pbom.trigger.issueKey}.json`;

@@ -43,120 +43,280 @@ const RunPipelineSchema = z.object({
 
 const pipelineStore: FrontendPipelineResult[] = [
   {
-    issueKey: 'DEV-5',
-    summary: 'Implement user authentication with JWT tokens and refresh flow',
-    priority: 'highest',
+    issueKey: 'DEV-7',
+    summary: 'Implement MCP server with Jira query and GCP carbon tools',
+    priority: 'high',
     status: 'success',
     stages: [
-      { stage: 'plan', status: 'success', durationMs: 3200, output: 'Execution plan generated with 6 steps' },
-      { stage: 'develop', status: 'success', durationMs: 28400, output: '6/6 steps completed via TDD' },
-      { stage: 'security', status: 'success', durationMs: 5100, output: '0 critical findings' },
-      { stage: 'deploy', status: 'success', durationMs: 7500, output: 'Deployed to europe-west1' },
+      {
+        stage: 'plan',
+        status: 'success',
+        durationMs: 3200,
+        output:
+          'Execution plan generated with 6 steps: MCP server scaffold, Jira tool, GCP tool, Zod schemas, sanitizer, tests',
+      },
+      {
+        stage: 'develop',
+        status: 'success',
+        durationMs: 28400,
+        output: '6/6 steps completed via TDD — 3 MCP tools registered',
+      },
+      {
+        stage: 'security',
+        status: 'success',
+        durationMs: 5100,
+        output: '0 critical findings, 1 LOW (CORS wildcard)',
+      },
+      {
+        stage: 'deploy',
+        status: 'success',
+        durationMs: 7500,
+        output: 'Deployed to europe-west1 (28 gCO₂/kWh)',
+      },
     ],
     totalDurationMs: 44200,
     totalTokens: 18432,
     deployment: {
       status: 'deployed',
-      decision: { selectedRegion: 'europe-west1', carbonIntensity: 28, costPerHour: 0.034, compositeScore: 29.8 },
+      decision: {
+        selectedRegion: 'europe-west1',
+        carbonIntensity: 28,
+        costPerHour: 0.034,
+        compositeScore: 29.8,
+      },
     },
   },
   {
-    issueKey: 'DEV-12',
-    summary: 'Add rate limiting middleware for API endpoints',
+    issueKey: 'DEV-8',
+    summary: 'Add GCP carbon metrics API with region comparison and cost estimation',
     priority: 'high',
     status: 'success',
     stages: [
-      { stage: 'plan', status: 'success', durationMs: 2800, output: 'Execution plan generated with 4 steps' },
-      { stage: 'develop', status: 'success', durationMs: 19200, output: '4/4 steps completed via TDD' },
-      { stage: 'security', status: 'success', durationMs: 4300, output: '1 LOW finding' },
-      { stage: 'deploy', status: 'success', durationMs: 6100, output: 'Deployed to us-central1' },
+      {
+        stage: 'plan',
+        status: 'success',
+        durationMs: 2800,
+        output:
+          'Execution plan generated with 4 steps: carbon API, region scoring, cost model, dashboard endpoint',
+      },
+      {
+        stage: 'develop',
+        status: 'success',
+        durationMs: 19200,
+        output: '4/4 steps completed via TDD — 8 GCP regions indexed',
+      },
+      { stage: 'security', status: 'success', durationMs: 4300, output: '0 findings' },
+      {
+        stage: 'deploy',
+        status: 'success',
+        durationMs: 6100,
+        output: 'Deployed to europe-north1 (12 gCO₂/kWh)',
+      },
     ],
     totalDurationMs: 32400,
     totalTokens: 12890,
     deployment: {
       status: 'deployed',
-      decision: { selectedRegion: 'us-central1', carbonIntensity: 42, costPerHour: 0.028, compositeScore: 37.8 },
+      decision: {
+        selectedRegion: 'europe-north1',
+        carbonIntensity: 12,
+        costPerHour: 0.032,
+        compositeScore: 20.0,
+      },
     },
   },
   {
-    issueKey: 'DEV-18',
-    summary: 'Fix SQL injection vulnerability in search endpoint',
+    issueKey: 'DEV-9',
+    summary: 'Build security scanning agent with SAST analysis and vulnerability detection',
+    priority: 'highest',
+    status: 'success',
+    stages: [
+      {
+        stage: 'plan',
+        status: 'success',
+        durationMs: 3500,
+        output:
+          'Execution plan generated with 5 steps: SAST rules, scanner agent, severity classifier, gate logic, reporting',
+      },
+      {
+        stage: 'develop',
+        status: 'success',
+        durationMs: 24600,
+        output: '5/5 steps completed via TDD — OWASP Top 10 coverage',
+      },
+      {
+        stage: 'security',
+        status: 'success',
+        durationMs: 4800,
+        output: '1 MEDIUM finding (auth middleware missing on trigger endpoint)',
+      },
+      {
+        stage: 'deploy',
+        status: 'success',
+        durationMs: 8200,
+        output: 'Deployed to europe-west1 (28 gCO₂/kWh)',
+      },
+    ],
+    totalDurationMs: 41100,
+    totalTokens: 21340,
+    deployment: {
+      status: 'deployed',
+      decision: {
+        selectedRegion: 'europe-west1',
+        carbonIntensity: 28,
+        costPerHour: 0.034,
+        compositeScore: 29.8,
+      },
+    },
+  },
+  {
+    issueKey: 'DEV-10',
+    summary: 'Create deployment orchestrator with green region selection algorithm',
+    priority: 'high',
+    status: 'success',
+    stages: [
+      {
+        stage: 'plan',
+        status: 'success',
+        durationMs: 4100,
+        output:
+          'Execution plan generated with 8 steps: region ranker, composite scorer, Cloud Run integration, dry-run mode',
+      },
+      {
+        stage: 'develop',
+        status: 'success',
+        durationMs: 35600,
+        output: '8/8 steps completed via TDD — carbon-weighted selection working',
+      },
+      { stage: 'security', status: 'success', durationMs: 5400, output: '0 findings' },
+      {
+        stage: 'deploy',
+        status: 'success',
+        durationMs: 9800,
+        output: 'Dry run to asia-east1 (55 gCO₂/kWh) — validated but not cheapest',
+      },
+    ],
+    totalDurationMs: 54900,
+    totalTokens: 27810,
+    deployment: {
+      status: 'dry_run',
+      decision: {
+        selectedRegion: 'asia-east1',
+        carbonIntensity: 55,
+        costPerHour: 0.025,
+        compositeScore: 46.0,
+      },
+    },
+  },
+  {
+    issueKey: 'DEV-11',
+    summary: 'Add prompt injection sanitization middleware for all LLM inputs',
     priority: 'highest',
     status: 'blocked',
     stages: [
-      { stage: 'plan', status: 'success', durationMs: 2100, output: 'Execution plan generated with 3 steps' },
-      { stage: 'develop', status: 'success', durationMs: 15800, output: '3/3 steps completed via TDD' },
-      { stage: 'security', status: 'failed', durationMs: 6200, output: '2 CRITICAL findings — deployment blocked' },
-      { stage: 'deploy', status: 'failed', durationMs: 0, output: 'Blocked by security review' },
+      {
+        stage: 'plan',
+        status: 'success',
+        durationMs: 2100,
+        output:
+          'Execution plan generated with 3 steps: regex sanitizer, encoding detector, integration middleware',
+      },
+      {
+        stage: 'develop',
+        status: 'success',
+        durationMs: 15800,
+        output: '3/3 steps completed via TDD — 12 injection patterns covered',
+      },
+      {
+        stage: 'security',
+        status: 'failed',
+        durationMs: 6200,
+        output: '2 CRITICAL findings — Jira description bypass + base64 encoded injection',
+      },
+      {
+        stage: 'deploy',
+        status: 'failed',
+        durationMs: 0,
+        output: 'Blocked by security review — CRITICAL findings must be resolved',
+      },
     ],
     totalDurationMs: 24100,
     totalTokens: 9845,
     deployment: { status: 'blocked' },
   },
   {
-    issueKey: 'DEV-21',
-    summary: 'Implement webhook handler for Stripe payment events',
-    priority: 'high',
+    issueKey: 'DEV-12',
+    summary: 'Implement per-agent token tracking and efficiency metrics for Green Agents',
+    priority: 'medium',
     status: 'success',
     stages: [
-      { stage: 'plan', status: 'success', durationMs: 3500, output: 'Execution plan generated with 5 steps' },
-      { stage: 'develop', status: 'success', durationMs: 24600, output: '5/5 steps completed via TDD' },
-      { stage: 'security', status: 'success', durationMs: 4800, output: '1 MEDIUM finding, non-blocking' },
-      { stage: 'deploy', status: 'success', durationMs: 8200, output: 'Deployed to europe-west1' },
+      {
+        stage: 'plan',
+        status: 'success',
+        durationMs: 2800,
+        output:
+          'Execution plan generated with 4 steps: token recorder, correlation IDs, aggregation API, dashboard data',
+      },
+      {
+        stage: 'develop',
+        status: 'success',
+        durationMs: 19200,
+        output: '4/4 steps completed via TDD — per-tool token breakdown working',
+      },
+      {
+        stage: 'security',
+        status: 'success',
+        durationMs: 4300,
+        output: '1 LOW finding (CORS wildcard in dev mode)',
+      },
+      {
+        stage: 'deploy',
+        status: 'success',
+        durationMs: 6100,
+        output: 'Deployed to us-central1 (42 gCO₂/kWh)',
+      },
     ],
-    totalDurationMs: 41100,
-    totalTokens: 21340,
+    totalDurationMs: 32400,
+    totalTokens: 12890,
     deployment: {
       status: 'deployed',
-      decision: { selectedRegion: 'europe-west1', carbonIntensity: 28, costPerHour: 0.034, compositeScore: 29.8 },
+      decision: {
+        selectedRegion: 'us-central1',
+        carbonIntensity: 42,
+        costPerHour: 0.028,
+        compositeScore: 37.8,
+      },
     },
   },
   {
-    issueKey: 'DEV-24',
-    summary: 'Add GraphQL schema for user profile management',
+    issueKey: 'DEV-13',
+    summary: 'Build PBOM generation for pipeline audit trail and compliance',
     priority: 'medium',
     status: 'failed',
     stages: [
-      { stage: 'plan', status: 'success', durationMs: 2900, output: 'Execution plan generated with 7 steps' },
-      { stage: 'develop', status: 'failed', durationMs: 31200, output: '4/7 steps completed — test failures' },
-      { stage: 'security', status: 'failed', durationMs: 0, output: 'Skipped — development failed' },
+      {
+        stage: 'plan',
+        status: 'success',
+        durationMs: 2900,
+        output:
+          'Execution plan generated with 7 steps: PBOM schema, collector, exporter, versioning, tests, API, docs',
+      },
+      {
+        stage: 'develop',
+        status: 'failed',
+        durationMs: 31200,
+        output: '4/7 steps completed — export format test failures on nested agent data',
+      },
+      {
+        stage: 'security',
+        status: 'failed',
+        durationMs: 0,
+        output: 'Skipped — development failed',
+      },
       { stage: 'deploy', status: 'failed', durationMs: 0, output: 'Skipped — pipeline failed' },
     ],
     totalDurationMs: 34100,
     totalTokens: 15670,
-  },
-  {
-    issueKey: 'DEV-27',
-    summary: 'Create database migration for multi-tenancy support',
-    priority: 'high',
-    status: 'success',
-    stages: [
-      { stage: 'plan', status: 'success', durationMs: 4100, output: 'Execution plan generated with 8 steps' },
-      { stage: 'develop', status: 'success', durationMs: 35600, output: '8/8 steps completed via TDD' },
-      { stage: 'security', status: 'success', durationMs: 5400, output: '0 findings' },
-      { stage: 'deploy', status: 'success', durationMs: 9800, output: 'Dry run to asia-east1' },
-    ],
-    totalDurationMs: 54900,
-    totalTokens: 27810,
-    deployment: {
-      status: 'dry_run',
-      decision: { selectedRegion: 'asia-east1', carbonIntensity: 55, costPerHour: 0.025, compositeScore: 46.0 },
-    },
-  },
-  {
-    issueKey: 'DEV-31',
-    summary: 'Implement real-time notification system via WebSockets',
-    priority: 'medium',
-    status: 'blocked',
-    stages: [
-      { stage: 'plan', status: 'success', durationMs: 3300, output: 'Execution plan generated with 5 steps' },
-      { stage: 'develop', status: 'success', durationMs: 22100, output: '5/5 steps completed via TDD' },
-      { stage: 'security', status: 'failed', durationMs: 7200, output: '1 HIGH finding — deployment blocked' },
-      { stage: 'deploy', status: 'failed', durationMs: 0, output: 'Blocked by security review' },
-    ],
-    totalDurationMs: 32600,
-    totalTokens: 14290,
-    deployment: { status: 'blocked' },
   },
 ];
 
@@ -165,7 +325,7 @@ const PRIORITY_ORDER: Record<Priority, number> = { highest: 0, high: 1, medium: 
 function transformBackendResult(
   backend: BackendPipelineResult,
   summary: string,
-  priority: Priority,
+  priority: Priority
 ): FrontendPipelineResult {
   const stages: FrontendPipelineStage[] = backend.stages.map((s) => ({
     stage: s.stage as FrontendPipelineStage['stage'],
@@ -175,8 +335,7 @@ function transformBackendResult(
   }));
 
   const totalTokens =
-    (backend.tokenMetrics?.totalInputTokens ?? 0) +
-    (backend.tokenMetrics?.totalOutputTokens ?? 0);
+    (backend.tokenMetrics?.totalInputTokens ?? 0) + (backend.tokenMetrics?.totalOutputTokens ?? 0);
 
   const deployment = backend.deployment
     ? {

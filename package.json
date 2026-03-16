@@ -23,6 +23,7 @@
     "clean": "rm -rf dist coverage .turbo node_modules"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.79.0",
     "@google/genai": "^1.45.0",
     "@modelcontextprotocol/sdk": "^0.6.0",
     "@types/cors": "^2.8.19",

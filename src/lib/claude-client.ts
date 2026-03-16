@@ -1,21 +1,23 @@
 /**
  * LLM client for agent AI calls
- * Supports Ollama (local), Gemini API (API key), and Vertex AI (GCP project)
- * Priority: Ollama → Gemini → Vertex AI
+ * Supports Ollama (local), Gemini API, Anthropic API, and Vertex AI (GCP project)
+ * Priority: Ollama → Gemini → Anthropic → Vertex AI
  */
 
+import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenAI } from '@google/genai';
 import axios from 'axios';
 import { recordInvocation, estimateTokens } from '@/lib/token-tracker';
 import { logInfo, logError, type LogContext } from '@/lib/logger';
 
-export type LLMProvider = 'ollama' | 'gemini' | 'vertex';
+export type LLMProvider = 'ollama' | 'gemini' | 'anthropic' | 'vertex';
 
 let geminiClient: GoogleGenAI | null = null;
 
 export function getActiveProvider(): LLMProvider | null {
   if (process.env.OLLAMA_BASE_URL) return 'ollama';
   if (process.env.GEMINI_API_KEY) return 'gemini';
+  if (process.env.ANTHROPIC_API_KEY) return 'anthropic';
   if (process.env.GCP_PROJECT_ID) return 'vertex';
   return null;
 }
@@ -200,6 +202,72 @@ async function callGemini(request: ClaudeRequest, context: LogContext): Promise<
   }
 }
 
+async function callAnthropic(request: ClaudeRequest, context: LogContext): Promise<ClaudeResponse> {
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
+  const startTime = Date.now();
+
+  try {
+    logInfo('Calling Anthropic API', {
+      ...context,
+      model,
+      promptLength: request.prompt.length,
+      maxTokens: request.maxTokens ?? 4096,
+    });
+
+    const response = await client.messages.create({
+      model,
+      max_tokens: request.maxTokens ?? 4096,
+      system: request.system,
+      messages: [{ role: 'user', content: request.prompt }],
+    });
+
+    const textContent = response.content
+      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+      .map((b) => b.text)
+      .join('');
+    const inputTokens = response.usage.input_tokens;
+    const outputTokens = response.usage.output_tokens;
+    const latencyMs = Date.now() - startTime;
+
+    recordInvocation({
+      toolName: `anthropic:${request.toolName}`,
+      inputTokens,
+      outputTokens,
+      latencyMs,
+      timestamp: new Date().toISOString(),
+      correlationId: request.correlationId,
+      status: 'success',
+    });
+
+    logInfo('Anthropic API response received', {
+      ...context,
+      model,
+      inputTokens,
+      outputTokens,
+      latencyMs,
+    });
+
+    return { content: textContent, inputTokens, outputTokens, stopReason: response.stop_reason };
+  } catch (error) {
+    const latencyMs = Date.now() - startTime;
+    logError('Anthropic API call failed', context, error as Error);
+
+    recordInvocation({
+      toolName: `anthropic:${request.toolName}`,
+      inputTokens: estimateTokens(request.prompt),
+      outputTokens: 0,
+      latencyMs,
+      timestamp: new Date().toISOString(),
+      correlationId: request.correlationId,
+      status: 'error',
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+
+    throw error;
+  }
+}
+
 export async function callClaude(request: ClaudeRequest): Promise<ClaudeResponse> {
   const provider = getActiveProvider();
   const context: LogContext = {
@@ -210,12 +278,15 @@ export async function callClaude(request: ClaudeRequest): Promise<ClaudeResponse
   if (!provider) {
     logInfo('No LLM provider available, using deterministic fallback', context);
     throw new ClaudeUnavailableError(
-      'No LLM provider configured. Set OLLAMA_BASE_URL, GEMINI_API_KEY, or GCP_PROJECT_ID'
+      'No LLM provider configured. Set OLLAMA_BASE_URL, GEMINI_API_KEY, ANTHROPIC_API_KEY, or GCP_PROJECT_ID'
     );
   }
 
   if (provider === 'ollama') {
     return callOllama(request, context);
+  }
+  if (provider === 'anthropic') {
+    return callAnthropic(request, context);
   }
 
   return callGemini(request, context);

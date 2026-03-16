@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import request from 'supertest';
 import type { Express } from 'express';
 
@@ -134,11 +134,11 @@ describe('GET /api/pipelines', () => {
 
 describe('GET /api/pipelines/:issueKey', () => {
   it('returns a pipeline for a known issue key', async () => {
-    const res = await request(app).get('/api/pipelines/DEV-5');
+    const res = await request(app).get('/api/pipelines/DEV-7');
 
     expect(res.status).toBe(200);
     expect(res.body.data).toMatchObject({
-      issueKey: 'DEV-5',
+      issueKey: 'DEV-7',
       summary: expect.any(String),
       stages: expect.any(Array),
     });
