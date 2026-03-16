@@ -17,6 +17,8 @@ help:
 	@echo "  make lint-fix         - Run ESLint with --fix"
 	@echo "  make format           - Format code with Prettier"
 	@echo "  make format-check     - Check code formatting"
+	@echo "  make api              - Start REST API server"
+	@echo "  make api-dev          - Start REST API server with watch mode"
 	@echo "  make mcp-server       - Run MCP server"
 	@echo "  make install          - Install dependencies"
 	@echo "  make clean            - Clean build artifacts"
@@ -54,6 +56,12 @@ format:
 
 format-check:
 	npm run format:check
+
+api:
+	npm run api
+
+api-dev:
+	npm run api:dev
 
 mcp-server:
 	npm run mcp:server
