@@ -17,9 +17,19 @@ import { setupWebSocket } from '@/api/websocket';
 export function createApp() {
   const app = express();
 
+  const allowedOrigins = [
+    process.env.FRONTEND_URL || 'http://localhost:8080',
+    'https://d3v07.github.io',
+  ];
   app.use(
     cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.some((o) => origin.startsWith(o))) {
+          callback(null, true);
+        } else {
+          callback(null, false);
+        }
+      },
       credentials: true,
     })
   );
