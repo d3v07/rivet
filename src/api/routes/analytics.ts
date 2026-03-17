@@ -42,11 +42,13 @@ const MOCK_TOKEN_METRICS = {
 } as const;
 
 const MOCK_GREEN_SCORES: GreenScoreEntry[] = [
-  { issueKey: 'RIV-101', grade: 'A', tokenEfficiency: 1.72, carbonScore: 0.12 },
-  { issueKey: 'RIV-102', grade: 'B', tokenEfficiency: 1.35, carbonScore: 0.28 },
-  { issueKey: 'RIV-103', grade: 'A', tokenEfficiency: 1.61, carbonScore: 0.15 },
-  { issueKey: 'RIV-104', grade: 'C', tokenEfficiency: 0.94, carbonScore: 0.52 },
-  { issueKey: 'RIV-105', grade: 'D', tokenEfficiency: 0.63, carbonScore: 0.78 },
+  { issueKey: 'DEV-8', grade: 'B', tokenEfficiency: 1.35, carbonScore: 0.12 },
+  { issueKey: 'DEV-12', grade: 'C', tokenEfficiency: 0.98, carbonScore: 0.42 },
+  { issueKey: 'DEV-7', grade: 'C', tokenEfficiency: 0.87, carbonScore: 0.28 },
+  { issueKey: 'DEV-9', grade: 'C', tokenEfficiency: 0.91, carbonScore: 0.28 },
+  { issueKey: 'DEV-10', grade: 'D', tokenEfficiency: 0.62, carbonScore: 0.55 },
+  { issueKey: 'DEV-13', grade: 'D', tokenEfficiency: 0.54, carbonScore: 0.68 },
+  { issueKey: 'DEV-11', grade: 'D', tokenEfficiency: 0.48, carbonScore: 0.78 },
 ];
 
 const MOCK_SUGGESTIONS: TokenOptimizationSuggestion[] = [
@@ -116,13 +118,14 @@ analyticsRouter.get('/green-score', (_req, res) => {
       return;
     }
 
+    const pipelineKeys = ['DEV-7', 'DEV-8', 'DEV-9', 'DEV-10', 'DEV-11', 'DEV-12', 'DEV-13'];
     const totalTokens = metrics.totalInputTokens + metrics.totalOutputTokens;
     const scores: GreenScoreEntry[] = Object.entries(metrics.byTool).map(([_tool, data], i) => {
       const toolTokens = data.inputTokens + data.outputTokens;
       const efficiency = totalTokens > 0 ? (data.count / toolTokens) * 1000 : 0;
       const carbonScore = Math.min(toolTokens / totalTokens, 1);
       return {
-        issueKey: `RIV-${101 + i}`,
+        issueKey: pipelineKeys[i % pipelineKeys.length],
         grade: gradeFromEfficiency(efficiency),
         tokenEfficiency: Math.round(efficiency * 100) / 100,
         carbonScore: Math.round(carbonScore * 100) / 100,
