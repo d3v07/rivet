@@ -2,7 +2,22 @@
 
 **Submission for 2026 GitLab AI Hackathon** (Feb 9 — Mar 25, 2026)
 
-Rivet is a highly advanced, multi-agent asynchronous DevSecOps flow explicitly engineered to autonomously transform raw, unstructured Jira business requirements into secure, fully audited, and energy-optimized deployed code. The system directly addresses the hackathon's core theme, **"You Orchestrate, AI Accelerates,"** by implementing a verification-gap-closing architecture that removes friction from the software development lifecycle.
+| | |
+|---|---|
+| **Live Dashboard** | https://d3v07.github.io/rivet/ |
+| **Backend API** | https://rivet-api-1094724708022.europe-west1.run.app/api |
+| **Jira Board** | https://rivet444.atlassian.net (project: DEV) |
+
+Rivet is a multi-agent DevSecOps pipeline that transforms Jira business requirements into secure, audited, deployed code. Four AI agents handle planning, code generation, security scanning, and carbon-aware deployment — orchestrated through GitLab Duo Agent Platform with no human intervention unless a critical issue is found.
+
+### Pipeline Dashboard
+![Dashboard](docs/screenshots/rivet-dashboard.png)
+
+### Security Findings
+![Security](docs/screenshots/rivet-security.png)
+
+### Green Agents Metrics
+![Green Metrics](docs/screenshots/rivet-green.png)
 
 ## The Problem: The Verification Gap
 
@@ -10,7 +25,7 @@ AI models can generate thousands of lines of code in seconds. But human-driven v
 
 Rivet solves this by autonomously handling the entire pipeline:
 - **Contextual Planning**: Read unstructured Jira requirements, generate structured execution plans
-- **Code Generation**: Write application code via multi-provider LLM integration (Ollama/Gemini/Vertex)
+- **Code Generation**: Write application code via multi-provider LLM integration (Ollama/Gemini/Claude/Vertex)
 - **Security Auditing**: Scan code for OWASP vulnerabilities, auto-generate patches
 - **Intelligent Deployment**: Query GCP carbon intensity, deploy to lowest-carbon regions
 - **Compliance Tracking**: Generate Pipeline Bill of Materials (PBOM) for every run
@@ -24,7 +39,7 @@ All without human intervention, unless a critical issue requires manual review.
     ↓
 [Contextual Planner Agent] (MCP Client → Jira)
     ↓ (structured execution plan)
-[Developer Agent] (LLM: Ollama/Gemini/Vertex)
+[Developer Agent] (LLM: Ollama/Gemini/Claude/Vertex)
     ↓ (committed code)
 [Security Analyst Agent] (OWASP scanning)
     ↓ (approved or halted with human review)
@@ -49,7 +64,7 @@ All without human intervention, unless a critical issue requires manual review.
 |-------|-------------|
 | **General Prize Pool** | GitLab Duo Agent Platform, MCP integration, custom agents |
 | **Google Cloud + GitLab ($13.5k)** | Carbon-aware deployment via GCP BigQuery + Billing APIs |
-| **Anthropic via GitLab ($13.5k)** | Developer Agent uses multi-provider LLM (Ollama/Gemini/Vertex) for code generation |
+| **Anthropic via GitLab ($13.5k)** | Claude Sonnet as LLM provider via `@anthropic-ai/sdk`, token tracking, structured logging |
 | **Green Agents ($3k)** | Token efficiency tracking, context window optimization, carbon scoring |
 
 ## Getting Started
@@ -65,7 +80,7 @@ All without human intervention, unless a critical issue requires manual review.
 
 ```bash
 # Clone the repo
-git clone <gitlab-repo-url>
+git clone https://gitlab.com/gitlab-ai-hackathon/participants/35312041.git rivet
 cd rivet
 
 # Install dependencies
@@ -99,6 +114,22 @@ make mcp-server       # Run MCP server standalone
 make ci               # Run full CI pipeline locally
 ```
 
+## Frontend Dashboard
+
+The React frontend at [d3v07.github.io/rivet](https://d3v07.github.io/rivet/) provides real-time visibility into the pipeline:
+
+| Page | What It Shows |
+|------|---------------|
+| **Dashboard** | 7 pipeline runs with status, grade, stages, region, carbon, tokens |
+| **Security** | Aggregated OWASP findings, vulnerability trends, severity breakdown |
+| **Green Metrics** | Token efficiency leaderboard, carbon budget, region comparison, forecast |
+| **PBOM** | Expandable audit trail per pipeline — agents, tools, token counts |
+| **Backlog** | Live Jira Kanban board (13 issues via Jira REST API) |
+| **Audit** | Chronological event log across all pipeline activity |
+| **Report** | Sustainability report with carbon equivalences and recommendations |
+
+All data comes from the live Cloud Run API — no mock fallbacks.
+
 ## Architecture & Design
 
 ### AGENTS.md Governance
@@ -130,7 +161,7 @@ The orchestration flow is defined in `rivet-flow.yaml`:
 
 1. **Event Trigger**: Issue labeled "Rivet-Execute" → flow starts
 2. **Planner Stage**: Reads Jira issue, cross-references AGENTS.md, produces structured JSON execution plan
-3. **Developer Stage**: Consumes plan, generates code via LLM (Ollama/Gemini/Vertex), commits to feature branch
+3. **Developer Stage**: Consumes plan, generates code via LLM (Ollama/Gemini/Claude/Vertex), commits to feature branch
 4. **Security Stage**: Scans committed code, auto-patches fixable issues, blocks critical vulnerabilities
 5. **Deployer Stage**: Analyzes GCP carbon/pricing, selects optimal region, deploys
 6. **Fallback**: If security or deployment fails, creates human-review issue with full context
@@ -199,7 +230,7 @@ Proprietary (2026 GitLab AI Hackathon Submission)
 
 This project leverages:
 - **GitLab Duo Agent Platform** — foundational multi-agent orchestration
-- **Multi-provider LLM integration** (Ollama, Gemini, Vertex AI) — code generation and reasoning
+- **Multi-provider LLM integration** (Ollama, Gemini, Claude, Vertex AI) — code generation and reasoning
 - **Google Cloud Platform** — infrastructure and carbon data
 - **Model Context Protocol** — secure external API integration
 
