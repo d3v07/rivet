@@ -55,7 +55,7 @@ All without human intervention, unless a critical issue requires manual review.
 | **MCP Server** | Bridges GitLab Duo agents to external APIs (Jira, GCP) | Node.js, `@modelcontextprotocol/sdk` |
 | **GitLab Duo Agents** | Custom agents with task-specific prompts and tool access | GitLab Agent Platform, YAML config |
 | **AGENTS.md** | Hierarchical behavioral governance for AI agents | Markdown rules, enforced at runtime |
-| **YAML Flow** | Event-driven multi-agent orchestration | `.gitlab/flows/rivet-pipeline.yml` |
+| **YAML Flow** | Event-driven multi-agent orchestration | `flows/rivet-pipeline.yml` |
 | **CI/CD Pipeline** | Build, test, security, deploy automation | `.gitlab-ci.yml`, GitLab shared runners |
 
 ## Prize Tracks Targeted
@@ -157,7 +157,7 @@ All tool responses are sanitized against prompt injection patterns before return
 
 ### Multi-Agent Flow
 
-The orchestration flow is defined in `.gitlab/flows/rivet-pipeline.yml`:
+The orchestration flow is defined in `flows/rivet-pipeline.yml`:
 
 1. **Event Trigger**: Issue labeled "Rivet-Execute" → flow starts
 2. **Planner Stage**: Reads Jira issue, cross-references AGENTS.md, produces structured JSON execution plan
