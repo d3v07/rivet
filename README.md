@@ -55,7 +55,7 @@ All without human intervention, unless a critical issue requires manual review.
 | **MCP Server** | Bridges GitLab Duo agents to external APIs (Jira, GCP) | Node.js, `@modelcontextprotocol/sdk` |
 | **GitLab Duo Agents** | Custom agents with task-specific prompts and tool access | GitLab Agent Platform, YAML config |
 | **AGENTS.md** | Hierarchical behavioral governance for AI agents | Markdown rules, enforced at runtime |
-| **YAML Flow** | Event-driven multi-agent orchestration | `rivet-flow.yaml` |
+| **YAML Flow** | Event-driven multi-agent orchestration | `.gitlab/flows/rivet-pipeline.yml` |
 | **CI/CD Pipeline** | Build, test, security, deploy automation | `.gitlab-ci.yml`, GitLab shared runners |
 
 ## Prize Tracks Targeted
@@ -137,7 +137,7 @@ All data comes from the live Cloud Run API — no mock fallbacks.
 All AI agents follow directives defined in the hierarchical AGENTS.md system:
 
 - **Root AGENTS.md**: Global rules (async-first, immutability, least privilege, error handling, testing requirements)
-- **mcp-server/AGENTS.md**: Node.js/TypeScript-specific rules (strict types, Zod validation, external API integration patterns)
+- **src/mcp-server/AGENTS.md**: Node.js/TypeScript-specific rules (strict types, Zod validation, external API integration patterns)
 
 These rules ensure agents generate code that is:
 - **Maintainable**: Functions <50 lines, files <800 lines, clear naming
@@ -157,7 +157,7 @@ All tool responses are sanitized against prompt injection patterns before return
 
 ### Multi-Agent Flow
 
-The orchestration flow is defined in `rivet-flow.yaml`:
+The orchestration flow is defined in `.gitlab/flows/rivet-pipeline.yml`:
 
 1. **Event Trigger**: Issue labeled "Rivet-Execute" → flow starts
 2. **Planner Stage**: Reads Jira issue, cross-references AGENTS.md, produces structured JSON execution plan
@@ -186,7 +186,7 @@ Token efficiency is tracked per-agent and per-pipeline:
 ## Documentation
 
 - **AGENTS.md**: Global AI agent governance and rules
-- **mcp-server/AGENTS.md**: Node.js/TypeScript-specific patterns
+- **src/mcp-server/AGENTS.md**: Node.js/TypeScript-specific patterns
 - **docs/architecture.md**: Detailed system design
 - **docs/video-script.md**: 3-minute demo video script
 - **docs/qa-checklist.md**: QA testing checklist with all endpoints

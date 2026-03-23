@@ -1,6 +1,6 @@
 # AGENTS.md — Global AI Agent Governance for Rivet
 
-This file defines the system-wide behavioral directives for all AI agents operating within the Rivet repository. All GitLab Duo agents, custom agents, and external model integrations must adhere to these rules. Subdirectory-level AGENTS.md files may refine these rules for localized contexts (e.g., `/mcp-server/AGENTS.md` for Node.js/TypeScript strictness) but cannot contradict the root directives.
+This file defines the system-wide behavioral directives for all AI agents operating within the Rivet repository. All GitLab Duo agents, custom agents, and external model integrations must adhere to these rules. Subdirectory-level AGENTS.md files may refine these rules for localized contexts (e.g., `/src/mcp-server/AGENTS.md` for Node.js/TypeScript strictness) but cannot contradict the root directives.
 
 ## Core Directives
 
