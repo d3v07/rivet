@@ -1,240 +1,180 @@
-# Rivet — Multi-Agent DevSecOps Flow
+# Rivet
 
-**Submission for 2026 GitLab AI Hackathon** (Feb 9 — Mar 25, 2026)
+**Multi-agent DevSecOps pipeline that turns Jira tickets into secure, deployed code.**
 
-| | |
-|---|---|
-| **Live Dashboard** | https://d3v07.github.io/rivet/ |
-| **Backend API** | https://rivet-api-1094724708022.europe-west1.run.app/api |
-| **Jira Board** | https://rivet444.atlassian.net (project: DEV) |
+Hackathon submission — [GitLab AI Hackathon 2026](https://gitlab.com/gitlab-ai-hackathon) (Feb 9 – Mar 25)
 
-Rivet is a multi-agent DevSecOps pipeline that transforms Jira business requirements into secure, audited, deployed code. Four AI agents handle planning, code generation, security scanning, and carbon-aware deployment — orchestrated through GitLab Duo Agent Platform with no human intervention unless a critical issue is found.
+| Live | Link |
+|------|------|
+| Dashboard | [d3v07.github.io/rivet](https://d3v07.github.io/rivet/) |
+| API | [rivet-api-1094724708022.europe-west1.run.app/api](https://rivet-api-1094724708022.europe-west1.run.app/api/health) |
+| Jira | [rivet444.atlassian.net](https://rivet444.atlassian.net) |
 
-### Pipeline Dashboard
-![Dashboard](docs/screenshots/rivet-dashboard.png)
+---
 
-### Security Findings
+![Pipeline Dashboard](docs/screenshots/rivet-dashboard.png)
+
+## What It Does
+
+Rivet reads a Jira issue, breaks it into an execution plan, generates code, scans for security vulnerabilities, picks the lowest-carbon GCP region, and deploys. Four agents, zero manual steps unless something critical is found.
+
+```
+Jira Issue
+  → Planner Agent    (reads requirements, produces execution plan)
+  → Developer Agent  (writes code via TDD)
+  → Security Agent   (OWASP scan, blocks on critical findings)
+  → Deployer Agent   (carbon-aware region selection, deploys)
+  → PBOM             (full audit trail)
+```
+
+If security finds a critical issue, deployment is blocked automatically. No human needed.
+
+## Numbers
+
+| Metric | Value |
+|--------|-------|
+| Pipeline runs tracked | 7 |
+| AI agents | 4 |
+| Jira issues (live) | 13 |
+| API endpoints | 23 |
+| MCP tools | 6 |
+| Tests | 215 across 16 files |
+| Coverage | 85% |
+| GCP regions scored | 10 |
+| Tokens tracked | 118,877 |
+| Greenest region | europe-north1 (12 gCO2/kWh) |
+| Carbon saved | 78% vs default us-central1 |
+| Critical findings auto-blocked | 2 (prompt injection on DEV-11) |
+
+## Prize Tracks
+
+| Track | How Rivet Qualifies |
+|-------|---------------------|
+| **General** | 4 GitLab Duo agents, MCP server with 6 tools, YAML flow orchestration |
+| **Google Cloud ($13.5k)** | Carbon-aware deployment across 10 GCP regions, Cloud Run backend, cost/carbon composite scoring |
+| **Anthropic ($13.5k)** | Claude Sonnet integration via `@anthropic-ai/sdk`, token tracking, structured logging |
+| **Green Agents ($3k)** | Per-agent token efficiency, carbon budget tracking, region optimization, sustainability reporting |
+
+## Screenshots
+
+### Security Dashboard
 ![Security](docs/screenshots/rivet-security.png)
+
+2 critical findings on DEV-11 — base64-encoded prompt injection and Unicode homoglyph attack. Both detected automatically, deployment blocked.
 
 ### Green Agents Metrics
 ![Green Metrics](docs/screenshots/rivet-green.png)
 
-## The Problem: The Verification Gap
+Token efficiency leaderboard, carbon budget (143/500 gCO2), 10-region comparison, deployment strategy recommendations.
 
-AI models can generate thousands of lines of code in seconds. But human-driven verification, security auditing, compliance mapping, and deployment orchestration cannot keep up. This creates bottleneck: either developers manually verify everything (slow), or code ships untested (risky).
-
-Rivet solves this by autonomously handling the entire pipeline:
-- **Contextual Planning**: Read unstructured Jira requirements, generate structured execution plans
-- **Code Generation**: Write application code via multi-provider LLM integration (Ollama/Gemini/Claude/Vertex)
-- **Security Auditing**: Scan code for OWASP vulnerabilities, auto-generate patches
-- **Intelligent Deployment**: Query GCP carbon intensity, deploy to lowest-carbon regions
-- **Compliance Tracking**: Generate Pipeline Bill of Materials (PBOM) for every run
-
-All without human intervention, unless a critical issue requires manual review.
-
-## Architecture at a Glance
+## Architecture
 
 ```
-[Jira Issue: "Ready for Engineering"]
-    ↓
-[Contextual Planner Agent] (MCP Client → Jira)
-    ↓ (structured execution plan)
-[Developer Agent] (LLM: Ollama/Gemini/Claude/Vertex)
-    ↓ (committed code)
-[Security Analyst Agent] (OWASP scanning)
-    ↓ (approved or halted with human review)
-[Deployer Agent] (MCP Client → GCP carbon metrics)
-    ↓ (deployed to optimal region)
-[Pipeline Bill of Materials] (audit trail + metrics)
+src/
+  agents/           4 agents (planner, developer, security, deployer)
+  api/routes/       REST API — 10 route modules, 23 endpoints
+  lib/              LLM client (4 providers), logger, sanitizer, token tracker
+  mcp-server/       MCP server + 6 tools + Zod schemas
+  security/         PBOM generation
+  types/            TypeScript interfaces
+
+.gitlab/
+  agents/           GitLab Duo agent YAML configs (4)
+
+flows/              GitLab Duo flow orchestration
 ```
 
-### Core Components
+### LLM Providers
 
-| Component | Purpose | Technology |
-|-----------|---------|-----------|
-| **MCP Server** | Bridges GitLab Duo agents to external APIs (Jira, GCP) | Node.js, `@modelcontextprotocol/sdk` |
-| **GitLab Duo Agents** | Custom agents with task-specific prompts and tool access | GitLab Agent Platform, YAML config |
-| **AGENTS.md** | Hierarchical behavioral governance for AI agents | Markdown rules, enforced at runtime |
-| **YAML Flow** | Event-driven multi-agent orchestration | `flows/rivet-pipeline.yml` |
-| **CI/CD Pipeline** | Build, test, security, deploy automation | `.gitlab-ci.yml`, GitLab shared runners |
+Priority chain: Ollama → Gemini → Claude → Vertex AI. Each call tracks input/output tokens, latency, and provider.
 
-## Prize Tracks Targeted
+```
+OLLAMA_BASE_URL → local Ollama (development)
+GEMINI_API_KEY  → Gemini 2.5 Flash (production, Cloud Run)
+ANTHROPIC_API_KEY → Claude Sonnet (Anthropic prize track)
+GCP_PROJECT_ID  → Vertex AI (GCP-native fallback)
+```
 
-| Track | Integration |
-|-------|-------------|
-| **General Prize Pool** | GitLab Duo Agent Platform, MCP integration, custom agents |
-| **Google Cloud + GitLab ($13.5k)** | Carbon-aware deployment via GCP BigQuery + Billing APIs |
-| **Anthropic via GitLab ($13.5k)** | Claude Sonnet as LLM provider via `@anthropic-ai/sdk`, token tracking, structured logging |
-| **Green Agents ($3k)** | Token efficiency tracking, context window optimization, carbon scoring |
+### MCP Tools
 
-## Getting Started
+| Tool | What It Does |
+|------|-------------|
+| `query_jira_backlog` | Fetch issues from Jira REST API, sanitize against prompt injection |
+| `plan_issue` | Generate TDD execution plan from Jira issue |
+| `execute_plan` | Run the plan through Developer agent |
+| `review_code` | OWASP Top 10 security scan |
+| `fetch_gcp_carbon_metrics` | Carbon intensity per GCP region |
+| `get_compute_pricing` | Spot/on-demand pricing by region and machine type |
 
-### Prerequisites
+### Security
 
-- Node.js 18+
-- npm 9+
-- Git
-- GitLab account (local development works without it)
+- Prompt injection sanitization on all external data before it reaches agents
+- JQL injection prevention with regex-validated project keys
+- OWASP scanning (secrets, XSS, SQL injection, auth, prompt injection)
+- Zod validation on every MCP tool input/output
+- PBOM audit trail for every pipeline run
+- Human-in-the-loop gates on production deployments
 
-### Installation
+### Green Agents
+
+- Per-agent token tracking (input, output, latency per invocation)
+- Carbon-aware deployment: 60% carbon weight, 40% cost weight
+- Region scoring across 10 GCP regions with real carbon intensity data
+- Monthly carbon budget with sustainability recommendations
+- Token optimization suggestions per tool
+
+## Frontend
+
+11 pages, all powered by the live Cloud Run API:
+
+| Page | Purpose |
+|------|---------|
+| **Dashboard** | Pipeline overview — status, grade, stages, region, carbon, duration, tokens |
+| **Live** | Real-time pipeline visualization |
+| **Activity** | Recent pipeline activity timeline |
+| **Backlog** | Jira Kanban board (drag-and-drop, live from Jira REST API) |
+| **Security** | Findings table, vulnerability trends, OWASP category breakdown |
+| **Green Metrics** | Efficiency leaderboard, carbon budget, region map, forecast, cost estimator |
+| **PBOM** | Expandable audit trail — agents, tools, token counts per pipeline |
+| **Playground** | LLM prompt playground |
+| **Report** | Sustainability report with carbon equivalences |
+| **Audit** | Chronological event log with category filters |
+| **Settings** | Configuration panel |
+
+## Quick Start
 
 ```bash
-# Clone the repo
 git clone https://gitlab.com/gitlab-ai-hackathon/participants/35312041.git rivet
 cd rivet
-
-# Install dependencies
 npm ci
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your API keys (see Setup section below)
-
-# Run development server
-npm run dev
-
-# Run tests
-npm run test
-
-# Build for production
-npm run build
+cp .env.example .env    # add your API keys
+make ci                 # typecheck + lint + test + build
+make dev                # start dev server
 ```
 
-### Build Commands
+### API Smoke Test
 
 ```bash
-make dev              # Start dev server with watch
-make build            # Build TypeScript to dist/
-make test             # Run all tests
-make test-coverage    # Generate coverage report
-make lint             # Run ESLint
-make lint-fix         # Auto-fix linting issues
-make typecheck        # Type-check without emitting
-make mcp-server       # Run MCP server standalone
-make ci               # Run full CI pipeline locally
+curl -s https://rivet-api-1094724708022.europe-west1.run.app/api/health | jq .status
+curl -s https://rivet-api-1094724708022.europe-west1.run.app/api/pipelines | jq .meta.total
+curl -s https://rivet-api-1094724708022.europe-west1.run.app/api/security/findings | jq length
+curl -s https://rivet-api-1094724708022.europe-west1.run.app/api/backlog | jq .total
+curl -s https://rivet-api-1094724708022.europe-west1.run.app/api/carbon/regions | jq length
 ```
 
-## Frontend Dashboard
+## Stack
 
-The React frontend at [d3v07.github.io/rivet](https://d3v07.github.io/rivet/) provides real-time visibility into the pipeline:
-
-| Page | What It Shows |
-|------|---------------|
-| **Dashboard** | 7 pipeline runs with status, grade, stages, region, carbon, tokens |
-| **Security** | Aggregated OWASP findings, vulnerability trends, severity breakdown |
-| **Green Metrics** | Token efficiency leaderboard, carbon budget, region comparison, forecast |
-| **PBOM** | Expandable audit trail per pipeline — agents, tools, token counts |
-| **Backlog** | Live Jira Kanban board (13 issues via Jira REST API) |
-| **Audit** | Chronological event log across all pipeline activity |
-| **Report** | Sustainability report with carbon equivalences and recommendations |
-
-All data comes from the live Cloud Run API — no mock fallbacks.
-
-## Architecture & Design
-
-### AGENTS.md Governance
-
-All AI agents follow directives defined in the hierarchical AGENTS.md system:
-
-- **Root AGENTS.md**: Global rules (async-first, immutability, least privilege, error handling, testing requirements)
-- **src/mcp-server/AGENTS.md**: Node.js/TypeScript-specific rules (strict types, Zod validation, external API integration patterns)
-
-These rules ensure agents generate code that is:
-- **Maintainable**: Functions <50 lines, files <800 lines, clear naming
-- **Secure**: Input validation at boundaries, sanitization of LLM inputs, no secrets in logs
-- **Auditable**: Structured logging, correlation IDs, human-in-the-loop gates
-- **Efficient**: Token tracking, payload optimization, context window budgeting
-
-### MCP Server
-
-The MCP Server exposes tools that agents invoke via the Model Context Protocol:
-
-- **`query_jira_backlog`**: Fetch issues tagged "Ready for Engineering", return sanitized payloads
-- **`fetch_gcp_carbon_metrics`**: Query GCP carbon intensity per region
-- **`get_compute_pricing`**: Query GCP spot/on-demand pricing by region
-
-All tool responses are sanitized against prompt injection patterns before returning to the agent context.
-
-### Multi-Agent Flow
-
-The orchestration flow is defined in `flows/rivet-pipeline.yml`:
-
-1. **Event Trigger**: Issue labeled "Rivet-Execute" → flow starts
-2. **Planner Stage**: Reads Jira issue, cross-references AGENTS.md, produces structured JSON execution plan
-3. **Developer Stage**: Consumes plan, generates code via LLM (Ollama/Gemini/Claude/Vertex), commits to feature branch
-4. **Security Stage**: Scans committed code, auto-patches fixable issues, blocks critical vulnerabilities
-5. **Deployer Stage**: Analyzes GCP carbon/pricing, selects optimal region, deploys
-6. **Fallback**: If security or deployment fails, creates human-review issue with full context
-
-### Security Infrastructure
-
-- **Composite Identity & Least Privilege**: Each agent has a dedicated service account with minimal scopes
-- **Tool Output Sanitization**: All MCP responses are stripped of prompt injection patterns
-- **Remote Execution Sandboxing**: Dev Container spec for untested code execution
-- **Human-in-the-Loop Gates**: Production merges and deployments require manual approval
-- **Pipeline Bill of Materials (PBOM)**: JSON artifact documenting every pipeline run (runner image, agent versions, tool invocations, timestamps, actor)
-
-### Green Agents Optimization
-
-Token efficiency is tracked per-agent and per-pipeline:
-
-- **Payload Optimization**: Jira/GCP responses stripped of bloat (>50% reduction targeted)
-- **Context Window Budgeting**: Warn if any agent invocation exceeds 30k tokens
-- **Carbon Scoring**: Deploy to lowest-carbon region within latency bounds
-- **Metrics Report**: Aggregated per-pipeline statistics (total tokens, cost, carbon, latency)
-
-## Documentation
-
-- **AGENTS.md**: Global AI agent governance and rules
-- **src/mcp-server/AGENTS.md**: Node.js/TypeScript-specific patterns
-- **docs/architecture.md**: Detailed system design
-- **docs/video-script.md**: 3-minute demo video script
-- **docs/qa-checklist.md**: QA testing checklist with all endpoints
-- **docs/submission-checklist.md**: Submission preparation
-
-## Testing
-
-```bash
-# Run all tests
-npm run test
-
-# Run with coverage report
-npm run test:coverage
-
-# Run tests with UI
-npm run test:ui
-
-# Run specific test file
-npm run test src/__tests__/agents/planner.test.ts
-```
-
-Coverage target: **80% minimum** (100% for auth, security-critical code)
-
-## Deployment
-
-The system deploys to **Google Cloud Platform** via Cloud Run or GKE, selected based on:
-1. Carbon intensity metrics (prefer lowest-carbon regions)
-2. Compute pricing (prefer spot instances where available)
-3. Latency requirements (stay within configured SLA)
-
-The Deployer Agent handles region selection, config generation, and pipeline trigger—all autonomously.
-
-## Contributing
-
-This is a hackathon submission. Contributions are not accepted during the competition. After judging, this project may be made available under an open license.
+| Layer | Technology |
+|-------|-----------|
+| Backend | Node.js, TypeScript, Express |
+| LLM | Ollama, Gemini 2.5 Flash, Claude Sonnet, Vertex AI |
+| MCP | `@modelcontextprotocol/sdk` |
+| External APIs | Jira REST v3, GCP Carbon/Billing |
+| Frontend | React, Vite, Tailwind, shadcn/ui, Recharts |
+| Hosting | Cloud Run (europe-west1), GitHub Pages |
+| CI/CD | GitLab CI, shared runners |
+| Testing | Vitest, 85% coverage |
 
 ## License
 
 MIT — see [LICENSE](LICENSE)
-
-## Acknowledgments
-
-This project leverages:
-- **GitLab Duo Agent Platform** — foundational multi-agent orchestration
-- **Multi-provider LLM integration** (Ollama, Gemini, Claude, Vertex AI) — code generation and reasoning
-- **Google Cloud Platform** — infrastructure and carbon data
-- **Model Context Protocol** — secure external API integration
-
----
-
-**"You Orchestrate, AI Accelerates."** — GitLab AI Hackathon 2026
