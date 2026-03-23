@@ -188,8 +188,9 @@ Token efficiency is tracked per-agent and per-pipeline:
 - **AGENTS.md**: Global AI agent governance and rules
 - **mcp-server/AGENTS.md**: Node.js/TypeScript-specific patterns
 - **docs/architecture.md**: Detailed system design
-- **docs/demo-script.md**: 3-minute demo outline
-- **docs/submission-checklist.md**: Devpost submission preparation
+- **docs/video-script.md**: 3-minute demo video script
+- **docs/qa-checklist.md**: QA testing checklist with all endpoints
+- **docs/submission-checklist.md**: Submission preparation
 
 ## Testing
 
@@ -224,7 +225,7 @@ This is a hackathon submission. Contributions are not accepted during the compet
 
 ## License
 
-Proprietary (2026 GitLab AI Hackathon Submission)
+MIT — see [LICENSE](LICENSE)
 
 ## Acknowledgments
 
