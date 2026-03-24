@@ -34,9 +34,7 @@ describe('JiraClient', () => {
     beforeEach(async () => {
       const axios = await import('axios');
       mockGet = vi.fn();
-      vi.mocked(axios.default.create).mockReturnValue({ get: mockGet } as unknown as ReturnType<
-        typeof axios.default.create
-      >);
+      vi.mocked(axios.default.create).mockReturnValue({ get: mockGet } as unknown as ReturnType<typeof axios.default.create>);
       client = new JiraClient('https://jira.example.com', 'test@test.com', 'token');
     });
 
@@ -107,7 +105,7 @@ describe('JiraClient', () => {
 
       await client.fetchIssues('project = "TEST"', 25, 'corr-123');
 
-      expect(mockGet).toHaveBeenCalledWith('/rest/api/3/search/jql', {
+      expect(mockGet).toHaveBeenCalledWith('/rest/api/3/search', {
         params: expect.objectContaining({
           jql: 'project = "TEST"',
           maxResults: 25,
@@ -129,9 +127,7 @@ describe('JiraClient', () => {
     beforeEach(async () => {
       const axios = await import('axios');
       mockGet = vi.fn().mockResolvedValue({ data: { issues: [] } });
-      vi.mocked(axios.default.create).mockReturnValue({ get: mockGet } as unknown as ReturnType<
-        typeof axios.default.create
-      >);
+      vi.mocked(axios.default.create).mockReturnValue({ get: mockGet } as unknown as ReturnType<typeof axios.default.create>);
       client = new JiraClient('https://jira.example.com', 'test@test.com', 'token');
     });
 
@@ -164,7 +160,7 @@ describe('JiraClient', () => {
     it('should build JQL for valid project key', async () => {
       await client.fetchIssuesByProject('PROJ');
 
-      expect(mockGet).toHaveBeenCalledWith('/rest/api/3/search/jql', {
+      expect(mockGet).toHaveBeenCalledWith('/rest/api/3/search', {
         params: expect.objectContaining({
           jql: 'project = "PROJ"',
         }),
@@ -174,7 +170,7 @@ describe('JiraClient', () => {
     it('should append status filter to JQL', async () => {
       await client.fetchIssuesByProject('PROJ', 'In Progress');
 
-      expect(mockGet).toHaveBeenCalledWith('/rest/api/3/search/jql', {
+      expect(mockGet).toHaveBeenCalledWith('/rest/api/3/search', {
         params: expect.objectContaining({
           jql: 'project = "PROJ" AND status = "In Progress"',
         }),
@@ -184,7 +180,7 @@ describe('JiraClient', () => {
     it('should sanitize status with quotes', async () => {
       await client.fetchIssuesByProject('PROJ', 'Ready "for" Dev');
 
-      expect(mockGet).toHaveBeenCalledWith('/rest/api/3/search/jql', {
+      expect(mockGet).toHaveBeenCalledWith('/rest/api/3/search', {
         params: expect.objectContaining({
           jql: 'project = "PROJ" AND status = "Ready \\"for\\" Dev"',
         }),

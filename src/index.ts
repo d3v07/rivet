@@ -18,8 +18,7 @@ export async function main(): Promise<void> {
   logInfo('Rivet pipeline starting', {
     correlationId,
     version: VERSION,
-    ollamaConfigured: !!process.env.OLLAMA_BASE_URL,
-    geminiConfigured: !!process.env.GEMINI_API_KEY,
+    claudeAvailable: !!process.env.ANTHROPIC_API_KEY,
     jiraConfigured: !!process.env.JIRA_BASE_URL,
     gcpConfigured: !!process.env.GCP_PROJECT_ID,
   });
@@ -75,7 +74,7 @@ export async function main(): Promise<void> {
 const isMain = process.argv[1]?.endsWith('index.ts') || process.argv[1]?.endsWith('index.js');
 if (isMain) {
   main().catch((error) => {
-    console.error('Pipeline failed:', error instanceof Error ? error.message : String(error));
+    console.error('Pipeline failed:', error);
     process.exit(1);
   });
 }

@@ -145,7 +145,7 @@ export class Orchestrator {
 
     const backlog = await executeQueryJiraBacklog({
       projectKey,
-      statusFilter: 'To Do',
+      statusFilter: 'Ready for Engineering',
       maxResults: maxIssues,
       correlationId: this.correlationId,
     });
@@ -179,7 +179,10 @@ export class Orchestrator {
   /**
    * Run a single pipeline stage with timing and error handling
    */
-  private async runStage(stageName: string, fn: () => Promise<string>): Promise<PipelineStage> {
+  private async runStage(
+    stageName: string,
+    fn: () => Promise<string>
+  ): Promise<PipelineStage> {
     const startedAt = new Date().toISOString();
     const startMs = Date.now();
 
