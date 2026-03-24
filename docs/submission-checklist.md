@@ -18,9 +18,9 @@
 - [x] Async pipeline with error handling
 - [x] Full E2E integration test
 
-## Prize Track: Anthropic via GitLab
+## Prize Track: Multi-Provider LLM
 
-- [x] Multi-provider LLM integration (Ollama/Gemini/Claude/Vertex)
+- [x] Multi-provider LLM integration (Ollama/Gemini/Vertex)
 - [x] Structured prompts with system/user separation
 - [x] Graceful fallback when API unavailable
 - [x] Token usage tracking per agent call
